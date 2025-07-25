@@ -5,10 +5,19 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as Tone from 'tone';
 
-// Define the Firebase configuration and app ID from the environment variables
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+// Define the Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCw3oPJKCHchzDoCmNjMc7mXGJBcG3tAPM",
+  authDomain: "friends-reminder-1b494.firebaseapp.com",
+  projectId: "friends-reminder-1b494",
+  storageBucket: "friends-reminder-1b494.firebasestorage.app",
+  messagingSenderId: "818386771400",
+  appId: "1:818386771400:web:3ca4fb33b928355c10f4fd",
+  measurementId: "G-ZQ6RJSWMR2"
+};
+
+const appId = "friends-reminder-1b494";
+const initialAuthToken = null;
 
 // Initialize Firebase App outside of the component to avoid re-initialization on every render.
 const app = initializeApp(firebaseConfig);
