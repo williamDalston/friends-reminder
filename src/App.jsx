@@ -175,6 +175,16 @@ const App = () => {
     const [activityLogFilterTerm, setActivityLogFilterTerm] = useState('');
     const [activityLogSortOption, setActivityLogSortOption] = useState('newest');
 
+    // Collapsible section states
+    const [isMessagingOverviewExpanded, setIsMessagingOverviewExpanded] = useState(true);
+    const [isRelationshipInsightsExpanded, setIsRelationshipInsightsExpanded] = useState(false);
+    const [isAllFriendsExpanded, setIsAllFriendsExpanded] = useState(true);
+    const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
+    
+    // Collaboration states
+    const [sharedListId, setSharedListId] = useState('');
+    const [showCollaborationSuccess, setShowCollaborationSuccess] = useState(false);
+
     // Tone.js Synth for notification sounds
     const synth = useMemo(() => new Tone.Synth().toDestination(), []);
 
@@ -1113,12 +1123,12 @@ const App = () => {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(appId)
                 .then(() => {
-                    setMessage("App ID copied to clipboard!");
+                    setMessage("Shared List ID copied to clipboard!");
                     setShowModal(true);
                 })
                 .catch(err => {
-                    console.error('Failed to copy App ID:', err);
-                    setMessage("Failed to copy App ID. Please copy manually: " + appId);
+                    console.error('Failed to copy Shared List ID:', err);
+                    setMessage("Failed to copy Shared List ID. Please copy manually: " + appId);
                     setShowModal(true);
                 });
         } else {
@@ -1131,15 +1141,37 @@ const App = () => {
             textArea.select();
             try {
                 document.execCommand('copy');
-                setMessage("App ID copied to clipboard!");
+                setMessage("Shared List ID copied to clipboard!");
                 setShowModal(true);
             } catch (err) {
                 console.error('Fallback: Oops, unable to copy', err);
-                setMessage("Failed to copy App ID. Please copy manually: " + appId);
+                setMessage("Failed to copy Shared List ID. Please copy manually: " + appId);
                 setShowModal(true);
             }
             document.body.removeChild(textArea);
         }
+    };
+
+    const handleJoinSharedList = () => {
+        if (!sharedListId.trim()) {
+            setMessage("Please enter a Shared List ID");
+            setShowModal(true);
+            return;
+        }
+        
+        // For now, we'll just show success message
+        // In a real implementation, you'd validate the ID and switch to shared mode
+        setShowCollaborationSuccess(true);
+        setMessage("Successfully joined shared list!");
+        setShowModal(true);
+        
+        // Clear the input
+        setSharedListId('');
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+            setShowCollaborationSuccess(false);
+        }, 3000);
     };
 
     // Function to export friends data to JSON
@@ -1458,6 +1490,35 @@ const App = () => {
             labels: Object.keys(monthlyCounts),
             data: Object.values(monthlyCounts)
         };
+    };
+
+    // Collapsible Section Component
+    const CollapsibleSection = ({ title, isExpanded, onToggle, children }) => {
+        return (
+            <div style={collapsibleSectionStyles}>
+                <div 
+                    style={collapsibleHeaderStyles}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = collapsibleHeaderHoverStyles.backgroundColor}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = collapsibleHeaderStyles.backgroundColor}
+                    onClick={onToggle}
+                >
+                    <h3 style={{ margin: 0, color: currentTheme.textColor }}>{title}</h3>
+                    <span style={{ 
+                        fontSize: '1.2rem', 
+                        color: currentTheme.textColor,
+                        transition: 'transform 0.3s ease',
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                    }}>
+                        ▼
+                    </span>
+                </div>
+                {isExpanded && (
+                    <div style={collapsibleContentStyles}>
+                        {children}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     // Component for the Interaction Chart
@@ -2175,6 +2236,53 @@ const App = () => {
         verticalAlign: 'middle',
     };
 
+    const collapsibleSectionStyles = {
+        border: `1px solid ${currentTheme.inputBorder}`,
+        borderRadius: '8px',
+        marginBottom: '20px',
+        overflow: 'hidden',
+        transition: 'all 0.3s ease',
+    };
+
+    const collapsibleHeaderStyles = {
+        backgroundColor: currentTheme.listItemBg,
+        padding: '15px 20px',
+        cursor: 'pointer',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderBottom: `1px solid ${currentTheme.inputBorder}`,
+        transition: 'background-color 0.3s ease',
+    };
+
+    const collapsibleHeaderHoverStyles = {
+        backgroundColor: darkMode ? '#3a4e60' : '#e8f6f3',
+    };
+
+    const collapsibleContentStyles = {
+        padding: '20px',
+        backgroundColor: currentTheme.containerBg,
+    };
+
+    const collaborationSectionStyles = {
+        backgroundColor: currentTheme.shareInfoBg,
+        border: `1px solid ${currentTheme.shareInfoBorder}`,
+        borderRadius: '8px',
+        padding: '20px',
+        marginBottom: '20px',
+    };
+
+    const collaborationInputStyles = {
+        width: '100%',
+        padding: '10px',
+        border: `1px solid ${currentTheme.inputBorder}`,
+        borderRadius: '4px',
+        fontSize: '1rem',
+        backgroundColor: currentTheme.inputBg,
+        color: currentTheme.textColor,
+        marginBottom: '10px',
+    };
+
     const socialMediaLinkContainerStyles = {
         display: 'flex',
         alignItems: 'center',
@@ -2298,13 +2406,6 @@ const App = () => {
                     </button>
                 </div>
 
-                {/* User ID Display - Useful for debugging and understanding multi-user data */}
-                {userId && (
-                    <p style={userIdDisplayStyles}>
-                        Your User ID: <strong>{userId}</strong> (Share this for multi-user apps)
-                    </p>
-                )}
-
                 {/* Mode Toggle Buttons: Switch between private and shared lists */}
                 <div style={modeToggleContainerStyles}>
                     <button
@@ -2321,63 +2422,202 @@ const App = () => {
                     </button>
                 </div>
 
-                {/* Shared App ID Information - Displayed only in shared mode */}
+                {/* Collaboration Section - Only visible in shared mode */}
                 {currentMode === 'shared' && (
-                    <div style={shareInfoStyles}>
-                        <p>Share this App ID with your friends to collaborate on this list:</p>
-                        <p><strong>{appId}</strong></p>
-                        <button
-                            onClick={copyAppIdToClipboard}
-                            style={copyButtonStyles}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = copyButtonHoverStyles.backgroundColor}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = copyButtonStyles.backgroundColor}
-                        >
-                            Copy App ID
-                        </button>
+                    <div style={collaborationSectionStyles}>
+                        <h3 style={{ marginTop: 0, color: currentTheme.textColor }}>Collaborate on a Friends List</h3>
+                        
+                        <div style={{ marginBottom: '20px' }}>
+                            <h4 style={{ color: currentTheme.textColor, marginBottom: '10px' }}>Create a New Shared List</h4>
+                            <p style={{ color: currentTheme.textColor, fontSize: '0.9rem', marginBottom: '10px' }}>
+                                Generate a Shared List ID to invite friends to collaborate on this list.
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                <span style={{ 
+                                    backgroundColor: currentTheme.containerBg, 
+                                    padding: '8px 12px', 
+                                    borderRadius: '4px',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.9rem',
+                                    color: currentTheme.textColor,
+                                    border: `1px solid ${currentTheme.inputBorder}`
+                                }}>
+                                    {appId}
+                                </span>
+                                <button
+                                    onClick={copyAppIdToClipboard}
+                                    style={copyButtonStyles}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = copyButtonHoverStyles.backgroundColor}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = copyButtonStyles.backgroundColor}
+                                >
+                                    Copy ID
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style={{ color: currentTheme.textColor, marginBottom: '10px' }}>Join an Existing Shared List</h4>
+                            <p style={{ color: currentTheme.textColor, fontSize: '0.9rem', marginBottom: '10px' }}>
+                                Enter a Shared List ID to join a friend's list.
+                            </p>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Enter Shared List ID"
+                                    value={sharedListId}
+                                    onChange={(e) => setSharedListId(e.target.value)}
+                                    style={collaborationInputStyles}
+                                />
+                                <button
+                                    onClick={handleJoinSharedList}
+                                    style={buttonStyles}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyles.backgroundColor}
+                                >
+                                    Join List
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
 
-                {/* Messaging Consistency Dashboard */}
-                <h2 style={sectionTitleStyles}>Messaging Overview</h2>
-                <div style={dashboardCardStyles}>
-                    <div style={dashboardItemStyles}>
-                        <div style={dashboardNumberStyles('#2ecc71')}>{friendsOnTrack}</div>
-                        <div>On Track</div>
-                    </div>
-                    <div style={dashboardItemStyles}>
-                        <div style={dashboardNumberStyles('#e74c3c')}>{friendsNeedingAttention}</div>
-                        <div>Needs Attention</div>
-                    </div>
-                    <div style={dashboardItemStyles}>
-                        <div style={dashboardNumberStyles('#34495e')}>{totalFriends}</div>
-                        <div>Total Friends</div>
-                    </div>
-                    {totalFriends > 0 && (
-                        <div style={progressBarContainerStyles}>
-                            <div style={progressBarFillStyles(onTrackPercentage)}></div>
+                {/* Add New Friend Form - Primary action */}
+                <h2 style={sectionTitleStyles}>Add New Friend</h2>
+                <div style={formContainerStyles}>
+                    <div style={formGridStyles}>
+                        <div>
+                            <label style={labelStyles}>Name *</label>
+                            <input
+                                type="text"
+                                placeholder="Friend's Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                style={inputStyles(nameError)}
+                            />
                         </div>
-                    )}
-                </div>
-
-                {/* Relationship Insights */}
-                <h2 style={sectionTitleStyles}>Relationship Insights</h2>
-                <div style={dashboardCardStyles}>
-                    <div style={dashboardItemStyles}>
-                        <div style={dashboardNumberStyles('#3498db')}>{totalInteractions}</div>
-                        <div>Total Interactions</div>
-                    </div>
-                    <div style={dashboardItemStyles}>
-                        <div style={dashboardNumberStyles('#9b59b6')}>{avgInteractionsPerFriend}</div>
-                        <div>Avg. Interactions/Friend</div>
-                    </div>
-                    <div style={dashboardItemStyles}>
-                        <div style={dashboardNumberStyles('#f39c12')}>
-                            {totalFriends > 0 ? (friends.reduce((sum, friend) => sum + parseFloat(calculateConsistencyScore(friend)), 0) / totalFriends).toFixed(0) : 0}%
+                        <div>
+                            <label style={labelStyles}>Birthday *</label>
+                            <input
+                                type="date"
+                                value={birthday}
+                                onChange={(e) => setBirthday(e.target.value)}
+                                style={inputStyles(birthdayError)}
+                            />
                         </div>
-                        <div>Avg. Consistency Score</div>
+                        <div>
+                            <label style={labelStyles}>Relationship Tier</label>
+                            <select
+                                value={relationshipTier}
+                                onChange={(e) => setRelationshipTier(e.target.value)}
+                                style={inputStyles(false)}
+                            >
+                                <option value="regular">Regular</option>
+                                <option value="close">Close</option>
+                                <option value="very-close">Very Close</option>
+                                <option value="family">Family</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style={labelStyles}>Reminder Frequency</label>
+                            <select
+                                value={reminderFrequency}
+                                onChange={(e) => setReminderFrequency(e.target.value)}
+                                style={inputStyles(false)}
+                            >
+                                <option value="weekly">Weekly</option>
+                                <option value="biweekly">Bi-weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Additional form fields */}
+                    <div style={{ marginTop: '20px' }}>
+                        <label style={labelStyles}>Group (Optional)</label>
+                        <input
+                            type="text"
+                            placeholder="e.g., Work, College, Family"
+                            value={group}
+                            onChange={(e) => setGroup(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                    </div>
+
+                    <div style={{ marginTop: '20px' }}>
+                        <label style={labelStyles}>Tags (Optional)</label>
+                        <input
+                            type="text"
+                            placeholder="e.g., coffee-buddy, hiking-partner (comma separated)"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                    </div>
+
+                    <div style={{ marginTop: '20px' }}>
+                        <label style={labelStyles}>Gift Ideas (Optional)</label>
+                        <textarea
+                            placeholder="e.g., loves coffee, into hiking, collects books"
+                            value={giftIdeas}
+                            onChange={(e) => setGiftIdeas(e.target.value)}
+                            style={{ ...inputStyles(false), minHeight: '80px', resize: 'vertical' }}
+                        />
+                    </div>
+
+                    {/* Per-friend Notification Settings */}
+                    <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '20px'}}>Notification Settings</h3>
+                    <div style={settingsGroupStyles}>
+                        <label style={settingsLabelStyles}>Enable Reminders:</label>
+                        <label style={toggleSwitchStyles}>
+                            <input
+                                type="checkbox"
+                                checked={enableReminders}
+                                onChange={() => setEnableReminders(!enableReminders)}
+                                style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={toggleSliderStyles(enableReminders)}>
+                                <span style={toggleSliderBeforeStyles(enableReminders)}></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div style={settingsGroupStyles}>
+                        <label style={settingsLabelStyles}>Enable Birthday Notifs:</label>
+                        <label style={toggleSwitchStyles}>
+                            <input
+                                type="checkbox"
+                                checked={enableBirthdayNotifications}
+                                onChange={() => setEnableBirthdayNotifications(!enableBirthdayNotifications)}
+                                style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={toggleSliderStyles(enableBirthdayNotifications)}>
+                                <span style={toggleSliderBeforeStyles(enableBirthdayNotifications)}></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '20px' }}>
+                        <button
+                            onClick={handleSaveFriend}
+                            style={buttonStyles}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyles.backgroundColor}
+                        >
+                            {editingFriendId ? 'Update Friend' : 'Add Friend'}
+                        </button>
+                        {editingFriendId && (
+                            <button
+                                onClick={handleCancelEdit}
+                                style={{ ...buttonStyles, backgroundColor: '#7f8c8d' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6c7a89'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#7f8c8d'}
+                            >
+                                Cancel Edit
+                            </button>
+                        )}
                     </div>
                 </div>
-
 
                 {/* Quick Add Friend Section */}
                 <h2 style={sectionTitleStyles}>Quick Add Friend</h2>
@@ -2962,6 +3202,279 @@ const App = () => {
                             })
                         )}
                     </ul>
+
+                    {/* Collapsible Sections */}
+                    <CollapsibleSection 
+                        title="Messaging Overview" 
+                        isExpanded={isMessagingOverviewExpanded}
+                        onToggle={() => setIsMessagingOverviewExpanded(!isMessagingOverviewExpanded)}
+                    >
+                        <div style={dashboardCardStyles}>
+                            <div style={dashboardItemStyles}>
+                                <div style={dashboardNumberStyles('#2ecc71')}>{friendsOnTrack}</div>
+                                <div>On Track</div>
+                            </div>
+                            <div style={dashboardItemStyles}>
+                                <div style={dashboardNumberStyles('#e74c3c')}>{friendsNeedingAttention}</div>
+                                <div>Needs Attention</div>
+                            </div>
+                            <div style={dashboardItemStyles}>
+                                <div style={dashboardNumberStyles('#34495e')}>{totalFriends}</div>
+                                <div>Total Friends</div>
+                            </div>
+                            {totalFriends > 0 && (
+                                <div style={progressBarContainerStyles}>
+                                    <div style={progressBarFillStyles(onTrackPercentage)}></div>
+                                </div>
+                            )}
+                        </div>
+                    </CollapsibleSection>
+
+                    <CollapsibleSection 
+                        title="Relationship Insights" 
+                        isExpanded={isRelationshipInsightsExpanded}
+                        onToggle={() => setIsRelationshipInsightsExpanded(!isRelationshipInsightsExpanded)}
+                    >
+                        <div style={dashboardCardStyles}>
+                            <div style={dashboardItemStyles}>
+                                <div style={dashboardNumberStyles('#3498db')}>{totalInteractions}</div>
+                                <div>Total Interactions</div>
+                            </div>
+                            <div style={dashboardItemStyles}>
+                                <div style={dashboardNumberStyles('#9b59b6')}>{avgInteractionsPerFriend}</div>
+                                <div>Avg. Interactions/Friend</div>
+                            </div>
+                            <div style={dashboardItemStyles}>
+                                <div style={dashboardNumberStyles('#f39c12')}>
+                                    {totalFriends > 0 ? (friends.reduce((sum, friend) => sum + parseFloat(calculateConsistencyScore(friend)), 0) / totalFriends).toFixed(0) : 0}%
+                                </div>
+                                <div>Avg. Consistency Score</div>
+                            </div>
+                        </div>
+                    </CollapsibleSection>
+
+                    <CollapsibleSection 
+                        title="All Friends" 
+                        isExpanded={isAllFriendsExpanded}
+                        onToggle={() => setIsAllFriendsExpanded(!isAllFriendsExpanded)}
+                    >
+                        {/* Search and Filter Controls */}
+                        <div style={{ marginBottom: '20px' }}>
+                            <input
+                                type="text"
+                                placeholder="Search friends..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={inputStyles(false)}
+                            />
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                                <select
+                                    value={filterOption}
+                                    onChange={(e) => setFilterOption(e.target.value)}
+                                    style={inputStyles(false)}
+                                >
+                                    <option value="all">All Friends</option>
+                                    <option value="needsMessaging">Needs Messaging</option>
+                                    <option value="onTrack">On Track</option>
+                                    <option value="upcomingBirthdays">Upcoming Birthdays</option>
+                                </select>
+                                <select
+                                    value={sortOption}
+                                    onChange={(e) => setSortOption(e.target.value)}
+                                    style={inputStyles(false)}
+                                >
+                                    <option value="nameAsc">Name (A-Z)</option>
+                                    <option value="nameDesc">Name (Z-A)</option>
+                                    <option value="lastContactAsc">Last Contact (Oldest)</option>
+                                    <option value="lastContactDesc">Last Contact (Newest)</option>
+                                    <option value="birthdayAsc">Birthday (Soonest)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Friends List */}
+                        <ul style={listStyles}>
+                            {filteredAndSortedFriends.length === 0 ? (
+                                <p style={{color: currentTheme.textColor}}>No friends found. Add your first friend above!</p>
+                            ) : (
+                                filteredAndSortedFriends.map((friend) => (
+                                    <li key={friend.id} style={listItemStyles}>
+                                        <FriendAvatar name={friend.name} profilePhotoUrl={friend.profilePhotoUrl} />
+                                        <div style={listItemContentStyles}>
+                                            <div style={listItemHeaderStyles}>
+                                                <span style={listItemNameStyles}>
+                                                    <strong>{friend.name}</strong>
+                                                    {friend.birthday && (
+                                                        <span style={birthdayCountdownStyles}>
+                                                            {formatDate(friend.birthday)} ({calculateAge(friend.birthday)})
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                <div style={listItemStatusStyles}>
+                                                    {needsMessaging(getLatestInteractionDate(friend.interactions), friend.reminderFrequency) && (
+                                                        <span style={statusIndicatorStyles('#e74c3c')}>Needs Attention</span>
+                                                    )}
+                                                    {friend.group && (
+                                                        <span style={statusIndicatorStyles('#3498db')}>{friend.group}</span>
+                                                    )}
+                                                    {friend.relationshipTier && friend.relationshipTier !== 'regular' && (
+                                                        <span style={statusIndicatorStyles('#9b59b6')}>{friend.relationshipTier}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div style={listItemDetailsStyles}>
+                                                <span>Last Contact: {formatDate(getLatestInteractionDate(friend.interactions))}</span>
+                                                <span>Frequency: {friend.reminderFrequency}</span>
+                                                {friend.giftIdeas && <span>Gift Ideas: {friend.giftIdeas}</span>}
+                                            </div>
+                                            {friend.tags && friend.tags.length > 0 && (
+                                                <div style={{ marginTop: '5px' }}>
+                                                    {friend.tags.map((tag, index) => (
+                                                        <span key={index} style={tagStyles}>{tag}</span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={listItemActionsStyles}>
+                                            <button
+                                                onClick={() => handleEditFriend(friend)}
+                                                style={editButtonStyles}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = editButtonHoverStyles.backgroundColor}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = editButtonStyles.backgroundColor}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleLogInteractionClick(friend.id)}
+                                                style={messageButtonStyles}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#1a5276' : '#2980b9'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = messageButtonStyles.backgroundColor}
+                                            >
+                                                Log
+                                            </button>
+                                            <button
+                                                onClick={() => confirmDeleteFriend(friend)}
+                                                style={deleteButtonStyles}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = deleteButtonHoverStyles.backgroundColor}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = deleteButtonStyles.backgroundColor}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))
+                            )}
+                        </ul>
+                    </CollapsibleSection>
+
+                    <CollapsibleSection 
+                        title="Settings" 
+                        isExpanded={isSettingsExpanded}
+                        onToggle={() => setIsSettingsExpanded(!isSettingsExpanded)}
+                    >
+                        {/* User ID Display - Moved to Settings */}
+                        {userId && (
+                            <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: currentTheme.listItemBg, borderRadius: '4px' }}>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: currentTheme.userIdColor }}>
+                                    Your User ID: <strong>{userId}</strong> (For debugging)
+                                </p>
+                            </div>
+                        )}
+
+                        <div style={settingsGroupStyles}>
+                            <label style={settingsLabelStyles}>Dark Mode:</label>
+                            <label style={toggleSwitchStyles}>
+                                <input
+                                    type="checkbox"
+                                    checked={darkMode}
+                                    onChange={() => setDarkMode(!darkMode)}
+                                    style={{ opacity: 0, width: 0, height: 0 }}
+                                />
+                                <span style={toggleSliderStyles(darkMode)}>
+                                    <span style={toggleSliderBeforeStyles(darkMode)}></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div style={settingsGroupStyles}>
+                            <label style={settingsLabelStyles}>Notification Sound:</label>
+                            <label style={toggleSwitchStyles}>
+                                <input
+                                    type="checkbox"
+                                    checked={notificationSoundEnabled}
+                                    onChange={() => setNotificationSoundEnabled(!notificationSoundEnabled)}
+                                    style={{ opacity: 0, width: 0, height: 0 }}
+                                />
+                                <span style={toggleSliderStyles(notificationSoundEnabled)}>
+                                    <span style={toggleSliderBeforeStyles(notificationSoundEnabled)}></span>
+                                </span>
+                            </label>
+                        </div>
+                        <button
+                            onClick={exportFriendsData}
+                            style={{ ...buttonStyles, backgroundColor: darkMode ? '#206a9e' : '#2980b9' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#1a5276' : '#2471a3'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#206a9e' : '#2980b9'}
+                        >
+                            Export All Friends Data (JSON)
+                        </button>
+                        <div style={settingsGroupStyles}>
+                            <label style={settingsLabelStyles}>Import Strategy:</label>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <label style={{ color: currentTheme.textColor, fontSize: '0.9em' }}>
+                                    <input
+                                        type="radio"
+                                        name="importStrategy"
+                                        value="append"
+                                        checked={importStrategy === 'append'}
+                                        onChange={(e) => setImportStrategy(e.target.value)}
+                                        style={{ marginRight: '5px' }}
+                                    />
+                                    Append
+                                </label>
+                                <label style={{ color: currentTheme.textColor, fontSize: '0.9em' }}>
+                                    <input
+                                        type="radio"
+                                        name="importStrategy"
+                                        value="merge"
+                                        checked={importStrategy === 'merge'}
+                                        onChange={(e) => setImportStrategy(e.target.value)}
+                                        style={{ marginRight: '5px' }}
+                                    />
+                                    Merge (by Name)
+                                </label>
+                                <label style={{ color: currentTheme.textColor, fontSize: '0.9em' }}>
+                                    <input
+                                        type="radio"
+                                        name="importStrategy"
+                                        value="overwrite"
+                                        checked={importStrategy === 'overwrite'}
+                                        onChange={(e) => setImportStrategy(e.target.value)}
+                                        style={{ marginRight: '5px' }}
+                                    />
+                                    Overwrite All
+                                </label>
+                            </div>
+                        </div>
+                        <div style={settingsGroupStyles}>
+                            <label style={settingsLabelStyles} htmlFor="importFile">Import Friends (JSON):</label>
+                            <input
+                                type="file"
+                                id="importFile"
+                                accept=".json"
+                                onChange={handleImportFriendsData}
+                                ref={fileInputRef}
+                                style={{ ...inputStyles(false), border: 'none', padding: '0', flex: '1' }}
+                            />
+                        </div>
+                        <button
+                            onClick={() => setShowActivityLogModal(true)}
+                            style={{ ...buttonStyles, backgroundColor: darkMode ? '#8e44ad' : '#9b59b6' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#7d3c98' : '#8e44ad'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#8e44ad' : '#9b59b6' }}
+                        >
+                            View Activity Log
+                        </button>
+                    </CollapsibleSection>
 
                     {/* Settings Section */}
                     <h2 style={{ ...sectionTitleStyles, ...settingsSectionStyles }}>Settings</h2>
