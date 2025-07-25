@@ -2464,8 +2464,8 @@ const App = () => {
                             placeholder="Friend's name"
                         />
                         <select
-                            value={quickReminderFrequency}
-                            onChange={(e) => setQuickReminderFrequency(e.target.value)}
+                            value={reminderFrequency}
+                            onChange={(e) => setReminderFrequency(e.target.value)}
                             style={{
                                 ...inputStyles(false),
                                 minWidth: '120px'
