@@ -5,7 +5,15 @@ import {
   collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as Tone from 'tone';
+// Lazy load Tone.js only when needed
+let Tone = null;
+const loadTone = async () => {
+  if (!Tone) {
+    const toneModule = await import('tone');
+    Tone = toneModule.default;
+  }
+  return Tone;
+};
 import Login from './Login';
 
 const appId = "friends-reminder-1b494";
@@ -175,8 +183,19 @@ const App = () => {
     const [activityLogFilterTerm, setActivityLogFilterTerm] = useState('');
     const [activityLogSortOption, setActivityLogSortOption] = useState('newest');
 
-    // Tone.js Synth for notification sounds
-    const synth = useMemo(() => new Tone.Synth().toDestination(), []);
+    // Tone.js Synth for notification sounds - lazy loaded
+    const [synth, setSynth] = useState(null);
+    
+    // Initialize synth when needed
+    const getSynth = useCallback(async () => {
+        if (!synth) {
+            const ToneInstance = await loadTone();
+            const newSynth = new ToneInstance.Synth().toDestination();
+            setSynth(newSynth);
+            return newSynth;
+        }
+        return synth;
+    }, [synth]);
 
     // Using useRef to store a Set of IDs for which notifications have been shown in the current session.
     const notifiedFriendsRef = useRef(new Set());
@@ -258,7 +277,11 @@ const App = () => {
             if (shouldNotify) {
                 new Notification(title, { body });
                 if (notificationSoundEnabled) {
-                    synth.triggerAttackRelease("C5", "8n");
+                    getSynth().then(synthInstance => {
+                        synthInstance.triggerAttackRelease("C5", "8n");
+                    }).catch(error => {
+                        console.error('Error playing notification sound:', error);
+                    });
                 }
             } else {
                 console.log(`Notification suppressed by per-friend setting: ${title} - ${body}`);
@@ -2262,12 +2285,28 @@ const App = () => {
                 height: '100vh',
                 backgroundColor: '#f4f7f6',
                 color: '#2c3e50',
-                fontSize: '1.2rem'
+                fontSize: '1.2rem',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}>
-                <div style={{ marginBottom: '20px' }}>Loading Friends Reminder...</div>
-                <div style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>
-                    If this takes too long, please refresh the page
+                <div style={{
+                    width: '60px',
+                    height: '60px',
+                    border: '4px solid #e1e5e9',
+                    borderTop: '4px solid #007AFF',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginBottom: '20px'
+                }}></div>
+                <div style={{ marginBottom: '10px', fontWeight: '600' }}>Loading Friends Reminder...</div>
+                <div style={{ fontSize: '0.9rem', color: '#7f8c8d', textAlign: 'center' }}>
+                    Initializing your app
                 </div>
+                <style>{`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `}</style>
             </div>
         );
     }
