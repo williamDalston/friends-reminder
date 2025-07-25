@@ -16,6 +16,63 @@ const loadTone = async () => {
 };
 import Login from './Login';
 
+// Collapsible Section Component
+const CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
+    const [expanded, setExpanded] = useState(defaultExpanded);
+    
+    const handleToggle = () => {
+        const newExpanded = !expanded;
+        setExpanded(newExpanded);
+        if (onToggle) onToggle(newExpanded);
+    };
+    
+    return (
+        <div style={{
+            marginBottom: '24px',
+            border: '1px solid #e1e5e9',
+            borderRadius: '8px',
+            overflow: 'hidden'
+        }}>
+            <button
+                onClick={handleToggle}
+                style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    backgroundColor: '#f8f9fa',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: '#2c3e50'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+            >
+                {title}
+                <span style={{
+                    fontSize: '20px',
+                    transition: 'transform 0.2s ease',
+                    transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                }}>
+                    ▼
+                </span>
+            </button>
+            {expanded && (
+                <div style={{
+                    padding: '20px',
+                    backgroundColor: '#ffffff'
+                }}>
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const appId = "friends-reminder-1b494";
 
 // Define theme colors for light and dark modes
@@ -186,6 +243,11 @@ const App = () => {
     // Tone.js Synth for notification sounds - lazy loaded
     const [synth, setSynth] = useState(null);
     const [showAdvancedForm, setShowAdvancedForm] = useState(false);
+    const [showMessagingOverview, setShowMessagingOverview] = useState(true); // Expanded by default
+    const [showRelationshipInsights, setShowRelationshipInsights] = useState(false); // Collapsed by default
+    const [showAllFriends, setShowAllFriends] = useState(true); // Expanded by default
+    const [showSettings, setShowSettings] = useState(false); // Collapsed by default
+    const [showAddNewFriend, setShowAddNewFriend] = useState(false); // Collapsed by default
     
     // Initialize synth when needed
     const getSynth = useCallback(async () => {
