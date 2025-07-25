@@ -17,12 +17,33 @@ console.log('Firebase config:', firebaseConfig);
 
 let app;
 try {
-  app = initializeApp(firebaseConfig);
+  if (!firebaseConfig.apiKey) {
+    console.error('Firebase config is missing apiKey - using fallback');
+    app = initializeApp({
+      apiKey: "AIzaSyCw3oPJKCHchzDoCmNjMc7mXGJBcG3tAPM",
+      authDomain: "friends-reminder-1b494.firebaseapp.com",
+      projectId: "friends-reminder-1b494",
+      storageBucket: "friends-reminder-1b494.firebasestorage.app",
+      messagingSenderId: "818386771400",
+      appId: "1:818386771400:web:3ca4fb33b928355c10f4fd",
+      measurementId: "G-ZQ6RJSWMR2"
+    });
+  } else {
+    app = initializeApp(firebaseConfig);
+  }
   console.log('Firebase app initialized successfully');
 } catch (error) {
   console.error('Firebase initialization failed:', error);
   // Create a minimal app to prevent crashes
-  app = initializeApp({});
+  app = initializeApp({
+    apiKey: "AIzaSyCw3oPJKCHchzDoCmNjMc7mXGJBcG3tAPM",
+    authDomain: "friends-reminder-1b494.firebaseapp.com",
+    projectId: "friends-reminder-1b494",
+    storageBucket: "friends-reminder-1b494.firebasestorage.app",
+    messagingSenderId: "818386771400",
+    appId: "1:818386771400:web:3ca4fb33b928355c10f4fd",
+    measurementId: "G-ZQ6RJSWMR2"
+  });
 }
 
 export const auth = getAuth(app);

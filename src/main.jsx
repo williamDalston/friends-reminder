@@ -6,6 +6,8 @@ import ErrorBoundary from './ErrorBoundary.jsx'
 console.log('main.jsx loading...');
 console.log('React version:', React.version);
 console.log('ReactDOM version:', ReactDOM.version);
+console.log('Document ready state:', document.readyState);
+console.log('Window location:', window.location.href);
 
 const rootElement = document.getElementById('root');
 console.log('Root element found:', rootElement);
