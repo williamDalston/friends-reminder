@@ -100,6 +100,8 @@ const tierFrequencies = {
 };
 
 const App = () => {
+    console.log('App component rendering...');
+    
     // Authentication state
     const [user, setUser] = useState(null);
     const [isAuthReady, setIsAuthReady] = useState(false);
