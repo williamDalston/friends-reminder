@@ -2431,7 +2431,7 @@ const App = () => {
                         marginBottom: '8px',
                         textAlign: 'center'
                     }}>
-                        {friends.length === 0 ? 'Add Your First Friend' : 'Add Friend & Set Reminder'}
+                        Create Custom Notification
                     </h2>
                     <p style={{
                         color: '#6c757d',
@@ -2439,10 +2439,7 @@ const App = () => {
                         fontSize: '16px',
                         textAlign: 'center'
                     }}>
-                        {friends.length === 0 
-                            ? 'Start tracking your relationships with reminders'
-                            : 'Add a new friend or select existing friend to set reminders'
-                        }
+                        Set up reminders to stay in touch with friends
                     </p>
                     
                     {/* Enhanced Add Friend Form */}
@@ -2509,7 +2506,7 @@ const App = () => {
                                     fontWeight: '600',
                                     color: '#2c3e50'
                                 }}>
-                                    Reminder Frequency
+                                    How often should we remind you?
                                 </label>
                                 <select
                                     value={reminderFrequency}
@@ -2532,7 +2529,7 @@ const App = () => {
                                     fontWeight: '600',
                                     color: '#2c3e50'
                                 }}>
-                                    Preferred Time
+                                    Preferred reminder time
                                 </label>
                                 <input
                                     type="time"
@@ -2552,7 +2549,7 @@ const App = () => {
                                 fontWeight: '600',
                                 color: '#2c3e50'
                             }}>
-                                Reminder Message (Optional)
+                                Reminder message (optional)
                             </label>
                             <textarea
                                 value={interactionNotes}
@@ -2586,7 +2583,7 @@ const App = () => {
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
                             >
-                                {friends.length === 0 ? 'Add First Friend' : 'Add Friend & Reminder'}
+                                Set Reminder
                             </button>
                         </div>
                     </div>
