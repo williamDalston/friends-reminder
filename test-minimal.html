@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Test</title>
+</head>
+<body>
+    <h1>Minimal Test</h1>
+    <p>If you see this, basic HTML is working.</p>
+    <div id="test-result">Testing JavaScript...</div>
+    
+    <script>
+        console.log('Minimal test script running...');
+        document.getElementById('test-result').innerHTML = '✅ JavaScript is working!';
+        
+        // Test if we can access window.__firebase_config
+        if (typeof window.__firebase_config !== 'undefined') {
+            console.log('Firebase config available:', window.__firebase_config);
+        } else {
+            console.log('Firebase config NOT available');
+        }
+    </script>
+</body>
+</html> 
