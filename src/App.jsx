@@ -2268,6 +2268,9 @@ const App = () => {
                 <div style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>
                     If this takes too long, please refresh the page
                 </div>
+                <div style={{ fontSize: '0.8rem', color: '#95a5a6', marginTop: '10px' }}>
+                    Debug: isAuthReady = {String(isAuthReady)}
+                </div>
             </div>
         );
     }

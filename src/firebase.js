@@ -26,7 +26,8 @@ try {
     console.log('Firebase initialized successfully');
 } catch (error) {
     console.error('Firebase initialization error:', error);
-    throw error;
+    // Don't throw error, just log it and continue
+    console.log('Continuing without Firebase...');
 }
 
 // Initialize Firebase services
