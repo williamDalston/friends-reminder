@@ -2374,6 +2374,180 @@ const App = () => {
                     </div>
                 )}
 
+                {/* Create Custom Notification - Primary Action */}
+                <div style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '16px',
+                    padding: '32px',
+                    marginBottom: '32px',
+                    border: '2px solid #e1e5e9',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }}>
+                    <h2 style={{
+                        fontSize: '28px',
+                        fontWeight: '700',
+                        color: '#2c3e50',
+                        marginBottom: '8px',
+                        textAlign: 'center'
+                    }}>
+                        Create Custom Notification
+                    </h2>
+                    <p style={{
+                        color: '#6c757d',
+                        marginBottom: '24px',
+                        fontSize: '16px',
+                        textAlign: 'center'
+                    }}>
+                        Set up reminders to stay in touch with friends
+                    </p>
+                    
+                    {/* Enhanced Add Friend Form */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        maxWidth: '600px',
+                        margin: '0 auto'
+                    }}>
+                        {/* Friend Selection */}
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'center',
+                            flexWrap: 'wrap'
+                        }}>
+                            <input
+                                type="text"
+                                value={quickAddName}
+                                onChange={(e) => setQuickAddName(e.target.value)}
+                                style={{
+                                    ...inputStyles(false),
+                                    flex: '1',
+                                    minWidth: '200px'
+                                }}
+                                placeholder="Friend's name"
+                            />
+                            {friends.length > 0 && (
+                                <select
+                                    value=""
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            const friend = friends.find(f => f.id === e.target.value);
+                                            if (friend) {
+                                                setQuickAddName(friend.name);
+                                            }
+                                        }
+                                    }}
+                                    style={{
+                                        ...inputStyles(false),
+                                        minWidth: '150px'
+                                    }}
+                                >
+                                    <option value="">Or select existing friend</option>
+                                    {friends.map(friend => (
+                                        <option key={friend.id} value={friend.id}>{friend.name}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+
+                        {/* Reminder Settings */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: '12px'
+                        }}>
+                            <div>
+                                <label style={{
+                                    display: 'block',
+                                    marginBottom: '4px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: '#2c3e50'
+                                }}>
+                                    How often should we remind you?
+                                </label>
+                                <select
+                                    value={reminderFrequency}
+                                    onChange={(e) => setReminderFrequency(e.target.value)}
+                                    style={inputStyles(false)}
+                                >
+                                    <option value="weekly">Weekly</option>
+                                    <option value="bi-weekly">Every 2 weeks</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Every 3 months</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style={{
+                                    display: 'block',
+                                    marginBottom: '4px',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: '#2c3e50'
+                                }}>
+                                    Preferred reminder time
+                                </label>
+                                <input
+                                    type="time"
+                                    value={preferredNotificationTime}
+                                    onChange={(e) => setPreferredNotificationTime(e.target.value)}
+                                    style={inputStyles(false)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Message/Notes */}
+                        <div>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '4px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#2c3e50'
+                            }}>
+                                Reminder message (optional)
+                            </label>
+                            <textarea
+                                value={interactionNotes}
+                                onChange={(e) => setInteractionNotes(e.target.value)}
+                                placeholder="e.g., 'Check in about work project' or 'Ask about vacation plans'"
+                                style={{
+                                    ...inputStyles(false),
+                                    minHeight: '80px',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit'
+                                }}
+                            />
+                        </div>
+
+                        {/* Action Button */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            marginTop: '8px'
+                        }}>
+                            <button
+                                onClick={handleQuickAddFriend}
+                                style={{
+                                    ...buttonStyles,
+                                    backgroundColor: '#28a745',
+                                    minWidth: '160px',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    padding: '12px 24px'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
+                            >
+                                Set Reminder
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Messaging Consistency Dashboard */}
                 <h2 style={sectionTitleStyles}>Messaging Overview</h2>
                 <div style={dashboardCardStyles}>
