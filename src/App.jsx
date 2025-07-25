@@ -1,29 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { db, auth, storage } from './firebase';
+import {
+  collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as Tone from 'tone';
-
-// Define the Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCw3oPJKCHchzDoCmNjMc7mXGJBcG3tAPM",
-  authDomain: "friends-reminder-1b494.firebaseapp.com",
-  projectId: "friends-reminder-1b494",
-  storageBucket: "friends-reminder-1b494.firebasestorage.app",
-  messagingSenderId: "818386771400",
-  appId: "1:818386771400:web:3ca4fb33b928355c10f4fd",
-  measurementId: "G-ZQ6RJSWMR2"
-};
+import Login from './Login';
 
 const appId = "friends-reminder-1b494";
-const initialAuthToken = null;
-
-// Initialize Firebase App outside of the component to avoid re-initialization on every render.
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const storage = getStorage(app);
 
 // Define theme colors for light and dark modes
 const themes = {
@@ -115,6 +100,10 @@ const tierFrequencies = {
 };
 
 const App = () => {
+    // Authentication state
+    const [user, setUser] = useState(null);
+    const [isAuthReady, setIsAuthReady] = useState(false);
+    
     // State variables for managing application data and UI
     const [friends, setFriends] = useState([]);
     const [name, setName] = useState('');
@@ -132,7 +121,6 @@ const App = () => {
     const [tags, setTags] = useState('');
     const [quickAddName, setQuickAddName] = useState('');
     const [userId, setUserId] = useState(null);
-    const [isAuthReady, setIsAuthReady] = useState(false);
     const [message, setMessage] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [showSnoozeModal, setShowSnoozeModal] = useState(false);
@@ -282,32 +270,24 @@ const App = () => {
         }
     }, [notificationSoundEnabled, quietHoursStart, quietHoursEnd, preferredNotificationTime, isNearPreferredNotificationTime, synth, friends]);
 
-    // useEffect hook for Firebase initialization and authentication.
+    // useEffect hook for Firebase authentication.
     useEffect(() => {
-        const setupFirebase = async () => {
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Firebase authentication error:", error);
-                setMessage("Failed to authenticate. Please try again.");
-                setShowModal(true);
-            }
-        };
-
+        console.log('Setting up Firebase auth...');
+        
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+            setUser(user);
             if (user) {
                 setUserId(user.uid);
             } else {
                 setUserId(null);
             }
             setIsAuthReady(true);
+        }, (error) => {
+            console.error('Firebase auth error:', error);
+            setIsAuthReady(true); // Still set ready so we can show error
         });
 
-        setupFirebase();
         requestNotificationPermission();
 
         return () => unsubscribeAuth();
@@ -2113,19 +2093,19 @@ const App = () => {
         height: '34px',
     };
 
-    const toggleSliderStyles = {
+    const toggleSliderStyles = (checked) => ({
         position: 'absolute',
         cursor: 'pointer',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: darkMode ? '#8e44ad' : '#ccc',
+        backgroundColor: checked ? '#2ecc71' : '#ccc',
         transition: '.4s',
         borderRadius: '34px',
-    };
+    });
 
-    const toggleSliderBeforeStyles = {
+    const toggleSliderBeforeStyles = (checked) => ({
         position: 'absolute',
         content: '""',
         height: '26px',
@@ -2135,8 +2115,8 @@ const App = () => {
         backgroundColor: 'white',
         transition: '.4s',
         borderRadius: '50%',
-        transform: darkMode ? 'translateX(26px)' : 'translateX(0)',
-    };
+        transform: checked ? 'translateX(26px)' : 'translateX(0)',
+    });
 
     const birthdayCountdownStyles = {
         fontWeight: 'bold',
@@ -2269,10 +2249,49 @@ const App = () => {
     };
 
 
+    // Authentication gate
+    if (!isAuthReady) {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                backgroundColor: '#f4f7f6',
+                color: '#2c3e50',
+                fontSize: '1.2rem'
+            }}>
+                <div style={{ marginBottom: '20px' }}>Loading Friends Reminder...</div>
+                <div style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>
+                    If this takes too long, please refresh the page
+                </div>
+            </div>
+        );
+    }
+    if (!user) return <Login />;
+
     return (
         <div style={appStyles}>
             <div style={containerStyles}>
-                <h1 style={headerStyles}>Friends Reminder</h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h1 style={headerStyles}>Friends Reminder</h1>
+                    <button 
+                        onClick={() => signOut(auth)}
+                        style={{
+                            backgroundColor: '#e74c3c',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '8px 16px',
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            fontWeight: '500'
+                        }}
+                    >
+                        Sign Out
+                    </button>
+                </div>
 
                 {/* User ID Display - Useful for debugging and understanding multi-user data */}
                 {userId && (
@@ -2605,8 +2624,8 @@ const App = () => {
                                 onChange={() => setEnableReminders(!enableReminders)}
                                 style={{ opacity: 0, width: 0, height: 0 }}
                             />
-                            <span style={toggleSliderStyles}>
-                                <span style={toggleSliderBeforeStyles}></span>
+                            <span style={toggleSliderStyles(enableReminders)}>
+                                <span style={toggleSliderBeforeStyles(enableReminders)}></span>
                             </span>
                         </label>
                     </div>
@@ -2619,8 +2638,8 @@ const App = () => {
                                 onChange={() => setEnableBirthdayNotifications(!enableBirthdayNotifications)}
                                 style={{ opacity: 0, width: 0, height: 0 }}
                             />
-                            <span style={toggleSliderStyles}>
-                                <span style={toggleSliderBeforeStyles}></span>
+                            <span style={toggleSliderStyles(enableBirthdayNotifications)}>
+                                <span style={toggleSliderBeforeStyles(enableBirthdayNotifications)}></span>
                             </span>
                         </label>
                     </div>
@@ -2981,8 +3000,8 @@ const App = () => {
                                     onChange={() => setDarkMode(!darkMode)}
                                     style={{ opacity: 0, width: 0, height: 0 }}
                                 />
-                                <span style={toggleSliderStyles}>
-                                    <span style={toggleSliderBeforeStyles}></span>
+                                <span style={toggleSliderStyles(darkMode)}>
+                                    <span style={toggleSliderBeforeStyles(darkMode)}></span>
                                 </span>
                             </label>
                         </div>
@@ -2995,8 +3014,8 @@ const App = () => {
                                     onChange={() => setNotificationSoundEnabled(!notificationSoundEnabled)}
                                     style={{ opacity: 0, width: 0, height: 0 }}
                                 />
-                                <span style={toggleSliderStyles}>
-                                    <span style={toggleSliderBeforeStyles}></span>
+                                <span style={toggleSliderStyles(notificationSoundEnabled)}>
+                                    <span style={toggleSliderBeforeStyles(notificationSoundEnabled)}></span>
                                 </span>
                             </label>
                         </div>
