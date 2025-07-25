@@ -2415,24 +2415,81 @@ const App = () => {
                 </div>
 
 
-                {/* Quick Add Friend Section */}
-                <h2 style={sectionTitleStyles}>Quick Add Friend</h2>
-                <div style={quickAddFormStyles}>
-                    <input
-                        type="text"
-                        placeholder="Friend's Name (Quick Add)"
-                        value={quickAddName}
-                        onChange={(e) => setQuickAddName(e.target.value)}
-                        style={quickAddInputStyles}
-                    />
-                    <button
-                        onClick={handleQuickAddFriend}
-                        style={quickAddButtonStyles}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = quickAddButtonStyles.backgroundColor}
-                    >
-                        Add Quickly
-                    </button>
+                {/* Primary Action - Add Friend */}
+                <div style={{
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    marginBottom: '32px',
+                    border: '2px dashed #dee2e6',
+                    textAlign: 'center'
+                }}>
+                    <h2 style={{
+                        fontSize: '24px',
+                        fontWeight: '600',
+                        color: '#2c3e50',
+                        marginBottom: '16px'
+                    }}>
+                        {friends.length === 0 ? 'Add Your First Friend' : 'Add a New Friend'}
+                    </h2>
+                    <p style={{
+                        color: '#6c757d',
+                        marginBottom: '20px',
+                        fontSize: '16px'
+                    }}>
+                        {friends.length === 0 
+                            ? 'Start by adding your first friend to keep track of your relationships'
+                            : 'Quickly add a new friend to your list'
+                        }
+                    </p>
+                    
+                    {/* Simple Quick Add Form */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexWrap: 'wrap'
+                    }}>
+                        <input
+                            type="text"
+                            value={quickAddName}
+                            onChange={(e) => setQuickAddName(e.target.value)}
+                            style={{
+                                ...inputStyles(false),
+                                flex: '1',
+                                minWidth: '200px',
+                                maxWidth: '300px'
+                            }}
+                            placeholder="Friend's name"
+                        />
+                        <select
+                            value={quickReminderFrequency}
+                            onChange={(e) => setQuickReminderFrequency(e.target.value)}
+                            style={{
+                                ...inputStyles(false),
+                                minWidth: '120px'
+                            }}
+                        >
+                            <option value="monthly">Monthly</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="bi-weekly">Bi-weekly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                        <button
+                            onClick={handleQuickAddFriend}
+                            style={{
+                                ...buttonStyles,
+                                backgroundColor: '#28a745',
+                                minWidth: '120px'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
+                        >
+                            Add Friend
+                        </button>
+                    </div>
                 </div>
 
 
