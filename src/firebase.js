@@ -15,13 +15,14 @@ const firebaseConfig =
 
 console.log('Firebase config:', firebaseConfig);
 
+let app;
 try {
-  const app = initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig);
   console.log('Firebase app initialized successfully');
 } catch (error) {
   console.error('Firebase initialization failed:', error);
   // Create a minimal app to prevent crashes
-  const app = initializeApp({});
+  app = initializeApp({});
 }
 
 export const auth = getAuth(app);
