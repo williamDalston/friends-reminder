@@ -42,7 +42,26 @@
   <body>
     <div id="root">
       <h1 style="color: red;">If you see this, React hasn't loaded yet</h1>
+      <p>Loading your Friends Reminder app...</p>
+      <div id="loading-status">Checking app status...</div>
     </div>
+    
+    <script>
+      // Simple fallback to show what's happening
+      setTimeout(() => {
+        const status = document.getElementById('loading-status');
+        if (status) {
+          status.innerHTML = 'Still loading... If this persists, check the browser console for errors.';
+        }
+      }, 3000);
+      
+      setTimeout(() => {
+        const status = document.getElementById('loading-status');
+        if (status) {
+          status.innerHTML = 'Loading is taking longer than expected. Please refresh the page.';
+        }
+      }, 10000);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
