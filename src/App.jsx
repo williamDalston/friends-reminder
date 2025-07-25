@@ -185,6 +185,7 @@ const App = () => {
 
     // Tone.js Synth for notification sounds - lazy loaded
     const [synth, setSynth] = useState(null);
+    const [showAdvancedForm, setShowAdvancedForm] = useState(false);
     
     // Initialize synth when needed
     const getSynth = useCallback(async () => {
