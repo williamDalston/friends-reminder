@@ -633,7 +633,7 @@ const App = () => {
                 giftIdeas: null,
                 giftStatus: 'Not Started',
                 giftBudget: null,
-                reminderFrequency: tierFrequencies['regular'],
+                reminderFrequency: reminderFrequency,
                 group: null,
                 relationshipTier: 'regular',
                 interactionNotes: null,
