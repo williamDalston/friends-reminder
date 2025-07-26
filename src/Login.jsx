@@ -622,7 +622,7 @@ export default function Login({ onSuccess }) {
                 : 'Sign in to continue to your dashboard'}
             </p>
           </div>
-          <div style={styles.form} ref={formRef}>
+          <div style={styles.form}>
             <InputField
               icon={Mail}
               name="email"
