@@ -3510,10 +3510,10 @@ const App = () => {
                         </button>
 
                         {/* Email Notification Settings */}
-                        <emailService.EmailSettingsForm />
+                        {/* <emailService.EmailSettingsForm /> */}
 
                         {/* Push Notification Settings */}
-                        <pushNotificationService.PushNotificationSettingsForm />
+                        {/* <pushNotificationService.PushNotificationSettingsForm /> */}
                     </div>
                     </CollapsibleSection>
                 </div>
