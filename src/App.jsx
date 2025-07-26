@@ -267,6 +267,8 @@ const App = () => {
     
     // Login modal state
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [showGuestAddFriendModal, setShowGuestAddFriendModal] = useState(false);
+    const [reminderConfirmation, setReminderConfirmation] = useState("");
 
     // Tone.js Synth for notification sounds - lazy loaded
     const [synth, setSynth] = useState(null);
