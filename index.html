@@ -38,6 +38,17 @@
         measurementId: "G-ZQ6RJSWMR2"
       });
       
+      // Register service worker for push notifications
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then(function(registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      }
+      
       // Preload critical resources
       const link = document.createElement('link');
       link.rel = 'preload';

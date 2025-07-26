@@ -15,6 +15,8 @@ const loadTone = async () => {
   return Tone;
 };
 import Login from './Login';
+import EmailService from './EmailService';
+import PushNotificationService from './PushNotificationService';
 
 
 
@@ -280,6 +282,10 @@ const App = () => {
     const [showAddNewFriend, setShowAddNewFriend] = useState(false); // Collapsed by default
     const [showFriendsToMessage, setShowFriendsToMessage] = useState(true); // Expanded by default
     const [showUpcomingBirthdays, setShowUpcomingBirthdays] = useState(true); // Expanded by default
+
+    // Initialize notification services
+    const emailService = EmailService({ userId, currentMode, appId });
+    const pushNotificationService = PushNotificationService({ userId, currentMode, appId });
     
     // Initialize synth when needed
     const getSynth = useCallback(async () => {
@@ -383,13 +389,26 @@ const App = () => {
             }
 
             if (shouldNotify) {
+                // Browser notification
                 new Notification(title, { body });
+                
+                // Play sound
                 if (notificationSoundEnabled) {
                     getSynth().then(synthInstance => {
                         synthInstance.triggerAttackRelease("C5", "8n");
                     }).catch(error => {
                         console.error('Error playing notification sound:', error);
                     });
+                }
+
+                // Send email notification
+                if (emailService.emailSettings.enableEmailNotifications && emailService.emailSettings.emailAddress) {
+                    emailService.sendImmediateEmail(friend, notificationType, body);
+                }
+
+                // Send push notification
+                if (pushNotificationService.pushSettings.enablePushNotifications && pushNotificationService.pushSettings.fcmToken) {
+                    pushNotificationService.sendPushNotification(friend, notificationType, body);
                 }
             } else {
                 console.log(`Notification suppressed by per-friend setting: ${title} - ${body}`);
@@ -401,7 +420,7 @@ const App = () => {
         } else {
             console.log(`Notification blocked (permission not granted): ${title} - ${body}`);
         }
-    }, [notificationSoundEnabled, quietHoursStart, quietHoursEnd, preferredNotificationTime, isNearPreferredNotificationTime, synth, friends]);
+    }, [notificationSoundEnabled, quietHoursStart, quietHoursEnd, preferredNotificationTime, isNearPreferredNotificationTime, synth, friends, emailService, pushNotificationService]);
 
     // useEffect hook for Firebase authentication with anonymous sign-in
     useEffect(() => {
@@ -3510,6 +3529,12 @@ const App = () => {
                         >
                             View Activity Log
                         </button>
+
+                        {/* Email Notification Settings */}
+                        <emailService.EmailSettingsForm />
+
+                        {/* Push Notification Settings */}
+                        <pushNotificationService.PushNotificationSettingsForm />
                     </div>
                     </CollapsibleSection>
                 </div>

@@ -1,9 +1,9 @@
 // src/firebase.js
-// src/firebase.js
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 // We keep using your globals injected from index.html
 console.log('Firebase initialization starting...');
@@ -50,6 +50,9 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+// Initialize Firebase Cloud Messaging
+export const messaging = getMessaging(app);
+
 // Google OAuth provider
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('email');
@@ -57,3 +60,48 @@ googleProvider.addScope('profile');
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
+
+// Push notification functions
+export const requestNotificationPermission = async () => {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('Notification permission granted');
+      return true;
+    } else {
+      console.log('Notification permission denied');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+    return false;
+  }
+};
+
+export const getFCMToken = async () => {
+  try {
+    const currentToken = await getToken(messaging, {
+      vapidKey: 'BK4VAPFNUQ0EkIjOaDqlBYwtOgSXFQkXBgcz3DG-SyJdgNK66QBB8ZuiymJtK2xY164r3EORW5flEwIb4ve7kTE'
+    });
+    
+    if (currentToken) {
+      console.log('FCM Token:', currentToken);
+      return currentToken;
+    } else {
+      console.log('No registration token available');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting FCM token:', error);
+    return null;
+  }
+};
+
+export const onMessageListener = () => {
+  return new Promise((resolve) => {
+    onMessage(messaging, (payload) => {
+      console.log('Message received:', payload);
+      resolve(payload);
+    });
+  });
+};

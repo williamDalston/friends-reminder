@@ -1,582 +1,724 @@
 // src/Login.jsx
-import React, { useState } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  sendPasswordResetEmail,
-} from 'firebase/auth';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff, Mail, Lock, CheckCircle, AlertCircle, X, Loader2, Shield, Sparkles, ArrowRight } from 'lucide-react';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
-import { Apple } from 'lucide-react';
 
-export default function Login({ onSuccess }) {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [bio, setBio] = useState('');
-
-  // Enhanced beautiful styling with mobile-first responsive design
-  const containerStyles = {
-    maxWidth: 'min(420px, 90vw)',
-    margin: '20px auto',
-    padding: 'clamp(24px, 6vw, 48px) clamp(20px, 4vw, 40px)',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: 'clamp(16px, 4vw, 24px)',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.04)',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    border: '1px solid rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(10px)',
-    minHeight: 'fit-content',
-    '@media (max-width: 480px)': {
-      margin: '10px auto',
-      padding: '24px 20px',
-    },
-  };
-
-  const titleStyles = {
-    fontSize: 'clamp(24px, 6vw, 32px)',
-    fontWeight: '800',
-    background: 'linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%)',
-    backgroundClip: 'text',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    textAlign: 'center',
-    marginBottom: 'clamp(24px, 6vw, 36px)',
-    letterSpacing: '-0.5px',
-    lineHeight: '1.2',
-  };
-
-  const subtitleStyles = {
-    fontSize: 'clamp(14px, 4vw, 16px)',
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 'clamp(24px, 6vw, 32px)',
-    lineHeight: '1.5',
-    padding: '0 10px',
-  };
-
-  const formStyles = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'clamp(16px, 4vw, 20px)',
-    marginBottom: 'clamp(20px, 5vw, 28px)',
-  };
-
-  const inputGroupStyles = {
-    position: 'relative',
-  };
-
-  const inputStyles = {
-    width: '100%',
-    padding: 'clamp(16px, 4vw, 18px) clamp(16px, 4vw, 20px)',
-    border: '2px solid #e5e7eb',
-    borderRadius: 'clamp(12px, 3vw, 16px)',
-    fontSize: '16px', // Keep 16px to prevent zoom on iOS
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
-    backgroundColor: '#ffffff',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-    minHeight: '44px', // Minimum touch target size
-    '&:focus': {
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05)',
-      transform: 'translateY(-1px)',
-    },
-    '&:hover': {
-      borderColor: '#d1d5db',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-    },
-    '@media (max-width: 480px)': {
-      fontSize: '16px', // Prevent zoom on iOS
-      padding: '16px 20px',
-    },
-  };
-
-  const primaryButtonStyles = {
-    width: '100%',
-    padding: 'clamp(16px, 4vw, 18px) clamp(20px, 5vw, 24px)',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: 'clamp(12px, 3vw, 16px)',
-    fontSize: '16px',
-    fontWeight: '700',
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1)',
-    position: 'relative',
-    overflow: 'hidden',
-    minHeight: '44px', // Minimum touch target size
-    '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 24px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)',
-    },
-    '&:active': {
-      transform: 'translateY(0)',
-      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-    },
-    '&:disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none',
-    },
-    '@media (max-width: 480px)': {
-      fontSize: '16px',
-      padding: '16px 24px',
-    },
-  };
-
-  const secondaryButtonStyles = {
-    width: '100%',
-    padding: 'clamp(14px, 4vw, 16px) clamp(20px, 5vw, 24px)',
-    backgroundColor: 'transparent',
-    color: '#3b82f6',
-    border: '2px solid #e5e7eb',
-    borderRadius: 'clamp(12px, 3vw, 16px)',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-    minHeight: '44px', // Minimum touch target size
-    '&:hover': {
-      borderColor: '#3b82f6',
-      backgroundColor: '#f0f9ff',
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)',
-    },
-    '&:disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none',
-    },
-    '@media (max-width: 480px)': {
-      fontSize: '16px',
-      padding: '14px 24px',
-    },
-  };
-
-  const googleButtonStyles = {
-    width: '100%',
-    padding: 'clamp(16px, 4vw, 18px) clamp(20px, 5vw, 24px)',
-    backgroundColor: '#ffffff',
-    color: '#374151',
-    border: '2px solid #e5e7eb',
-    borderRadius: 'clamp(12px, 3vw, 16px)',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+const styles = {
+  root: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 'clamp(8px, 2vw, 12px)',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-    minHeight: '44px', // Minimum touch target size
-    '&:hover': {
-      backgroundColor: '#f9fafb',
-      borderColor: '#d1d5db',
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    },
-    '&:disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none',
-    },
-    '@media (max-width: 480px)': {
-      fontSize: '16px',
-      padding: '16px 24px',
-      gap: '8px',
-    },
-  };
-
-  const dividerStyles = {
+    padding: '16px',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 400,
+    background: 'rgba(255,255,255,0.97)',
+    borderRadius: 24,
+    boxShadow: '0 8px 32px rgba(80, 80, 180, 0.12)',
+    border: '1px solid #f3e8ff',
+    overflow: 'hidden',
+    position: 'relative',
+    zIndex: 2,
+    margin: '0 auto',
+  },
+  header: {
+    background: 'linear-gradient(135deg, #6366f1 0%, #a21caf 100%)',
+    color: 'white',
+    padding: '32px 32px 20px 32px',
+    textAlign: 'center',
+    position: 'relative',
+  },
+  iconBox: {
+    width: 64,
+    height: 64,
+    background: 'rgba(255,255,255,0.18)',
+    borderRadius: 16,
     display: 'flex',
     alignItems: 'center',
-    margin: 'clamp(24px, 6vw, 32px) 0',
-    color: '#9ca3af',
-    fontSize: 'clamp(12px, 3vw, 14px)',
-    fontWeight: '500',
-  };
-
-  const dividerLineStyles = {
-    flex: 1,
-    height: '1px',
-    background: 'linear-gradient(90deg, transparent 0%, #e5e7eb 50%, transparent 100%)',
-  };
-
-  // Enhanced mobile-friendly notification styles
-  const messageStyles = {
-    padding: 'clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px)',
-    borderRadius: 'clamp(12px, 3vw, 16px)',
-    fontSize: 'clamp(13px, 3.5vw, 14px)',
-    textAlign: 'center',
-    marginTop: 'clamp(16px, 4vw, 20px)',
-    fontWeight: '500',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    justifyContent: 'center',
+    margin: '0 auto 16px auto',
+    boxShadow: '0 2px 8px rgba(80, 80, 180, 0.08)',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 700,
+    marginBottom: 8,
+    letterSpacing: '-0.5px',
+  },
+  subtitle: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 15,
+    marginBottom: 0,
+  },
+  form: {
+    padding: '32px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 24,
+    background: 'transparent',
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+  inputWrapper: {
     position: 'relative',
-    wordWrap: 'break-word',
-    overflowWrap: 'break-word',
-    lineHeight: '1.4',
-    // Mobile-specific enhancements
-    '@media (max-width: 480px)': {
-      margin: '16px 0 0 0',
-      padding: '16px 20px',
-      fontSize: '14px',
-      borderRadius: '12px',
-    },
-  };
-
-  const successMessageStyles = {
-    ...messageStyles,
-    background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
-    color: '#166534',
-    border: '1px solid #bbf7d0',
-    // Mobile-specific success styling
-    '@media (max-width: 480px)': {
-      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-    },
-  };
-
-  const errorMessageStyles = {
-    ...messageStyles,
-    background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)',
-    color: '#991b1b',
-    border: '1px solid #fecaca',
-    // Mobile-specific error styling
-    '@media (max-width: 480px)': {
-      background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)',
-    },
-  };
-
-  const toggleButtonStyles = {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  input: {
+    width: '100%',
+    padding: '14px 44px 14px 44px',
+    border: '2px solid #e0e7ff',
+    borderRadius: 12,
+    fontSize: 16,
+    background: 'rgba(255,255,255,0.95)',
+    color: '#22223b',
+    outline: 'none',
+    transition: 'border 0.2s, box-shadow 0.2s',
+    boxShadow: '0 1px 3px rgba(80, 80, 180, 0.04)',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 14,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: '#a5b4fc',
+    pointerEvents: 'none',
+  },
+  inputToggle: {
+    position: 'absolute',
+    right: 14,
+    top: '50%',
+    transform: 'translateY(-50%)',
     background: 'none',
     border: 'none',
-    color: '#3b82f6',
     cursor: 'pointer',
-    fontSize: 'clamp(13px, 3.5vw, 14px)',
-    fontWeight: '600',
-    textDecoration: 'none',
-    transition: 'all 0.2s ease',
-    padding: 'clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px)',
-    borderRadius: '8px',
-    minHeight: '32px', // Minimum touch target
-    '&:hover': {
-      backgroundColor: '#f0f9ff',
-      textDecoration: 'underline',
-    },
-    '@media (max-width: 480px)': {
-      fontSize: '14px',
-      padding: '8px 12px',
-      minHeight: '36px',
-    },
+    color: '#a5b4fc',
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  error: {
+    color: '#dc2626',
+    fontSize: 13,
+    marginTop: 2,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+  },
+  passwordStrengthBar: {
+    width: '100%',
+    height: 6,
+    borderRadius: 4,
+    background: '#e0e7ff',
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  passwordStrengthFill: strength => ({
+    height: '100%',
+    width: `${strength}%`,
+    borderRadius: 4,
+    background:
+      strength < 25
+        ? '#ef4444'
+        : strength < 50
+        ? '#f59e42'
+        : strength < 75
+        ? '#facc15'
+        : '#22c55e',
+    transition: 'width 0.4s, background 0.4s',
+  }),
+  passwordStrengthText: strength => ({
+    fontWeight: 500,
+    fontSize: 13,
+    color:
+      strength < 25
+        ? '#ef4444'
+        : strength < 50
+        ? '#f59e42'
+        : strength < 75
+        ? '#facc15'
+        : '#22c55e',
+    marginLeft: 8,
+  }),
+  rememberMe: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 0,
+    cursor: 'pointer',
+    userSelect: 'none',
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    border: '2px solid #a5b4fc',
+    background: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+    cursor: 'pointer',
+  },
+  button: {
+    width: '100%',
+    padding: '14px 0',
+    borderRadius: 12,
+    border: 'none',
+    fontWeight: 600,
+    fontSize: 16,
+    background: 'linear-gradient(90deg, #6366f1 0%, #a21caf 100%)',
+    color: 'white',
+    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(80, 80, 180, 0.08)',
+    marginTop: 4,
+    marginBottom: 0,
+    transition: 'background 0.2s, box-shadow 0.2s',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed',
+  },
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '24px 0',
+    color: '#a5b4fc',
+    fontSize: 14,
+    fontWeight: 500,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    background: 'linear-gradient(90deg, transparent 0%, #e0e7ff 50%, transparent 100%)',
+    border: 'none',
+  },
+  socialButton: {
+    width: '100%',
+    padding: '12px 0',
+    borderRadius: 10,
+    border: '2px solid #e0e7ff',
+    background: 'linear-gradient(90deg, #4285F4 0%, #34A853 100%)',
+    color: 'white',
+    fontWeight: 600,
+    fontSize: 16,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    cursor: 'pointer',
+    marginBottom: 0,
+    marginTop: 0,
+    transition: 'background 0.2s, border 0.2s',
+    outline: 'none',
+    borderColor: '#e0e7ff',
+  },
+  forgotPassword: {
+    width: '100%',
+    background: 'none',
+    border: 'none',
+    color: '#6366f1',
+    fontWeight: 500,
+    fontSize: 15,
+    margin: '12px 0 0 0',
+    cursor: 'pointer',
+    textAlign: 'left',
+    transition: 'color 0.2s',
+  },
+  switchMode: {
+    color: '#6366f1',
+    fontWeight: 600,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    fontSize: 15,
+    marginLeft: 4,
+    transition: 'color 0.2s',
+  },
+  notification: type => ({
+    position: 'fixed',
+    top: 24,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 1000,
+    maxWidth: 360,
+    width: '90vw',
+    padding: 18,
+    borderRadius: 16,
+    fontSize: 15,
+    fontWeight: 500,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+    background: type === 'success' ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)' : 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)',
+    color: type === 'success' ? '#166534' : '#991b1b',
+    border: `1px solid ${type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    transition: 'opacity 0.3s, transform 0.3s',
+    opacity: 1,
+  }),
+  notificationHiding: {
+    opacity: 0,
+    transform: 'translateX(-50%) translateY(-120%)',
+  },
+};
+
+export default function Login({ onSuccess }) {
+  const [mode, setMode] = useState('signin');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [focusedField, setFocusedField] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const firstInputRef = useRef(null);
+
+  useEffect(() => {
+    if (firstInputRef.current) {
+      firstInputRef.current.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (notification) {
+      // Notification is instantly dismissible and auto-dismisses after 2.5s
+      const timer = setTimeout(() => {
+        setNotification(prev => ({ ...prev, hiding: true }));
+        setTimeout(() => setNotification(null), 200);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  useEffect(() => {
+    if (formData.password) {
+      let strength = 0;
+      if (formData.password.length >= 8) strength += 25;
+      if (/[A-Z]/.test(formData.password)) strength += 25;
+      if (/[0-9]/.test(formData.password)) strength += 25;
+      if (/[^A-Za-z0-9]/.test(formData.password)) strength += 25;
+      setPasswordStrength(strength);
+    } else {
+      setPasswordStrength(0);
+    }
+  }, [formData.password]);
+
+  const showNotification = (message, type = 'error') => {
+    setNotification({ message, type, hiding: false });
   };
 
-  // Mobile-friendly popup notification component
-  const NotificationPopup = ({ message, type, onClose }) => {
-    const popupStyles = {
-      position: 'fixed',
-      top: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 1000,
-      maxWidth: 'min(90vw, 400px)',
-      padding: '16px 20px',
-      borderRadius: '12px',
-      fontSize: '14px',
-      fontWeight: '500',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.8)',
-      animation: 'slideDown 0.3s ease-out',
-      '@keyframes slideDown': {
-        '0%': { transform: 'translateX(-50%) translateY(-100%)', opacity: 0 },
-        '100%': { transform: 'translateX(-50%) translateY(0)', opacity: 1 },
-      },
-      // Mobile-specific popup styling
-      '@media (max-width: 480px)': {
-        top: '10px',
-        left: '10px',
-        right: '10px',
-        transform: 'none',
-        maxWidth: 'none',
-        padding: '16px 20px',
-        fontSize: '14px',
-      },
-    };
-
-    const successPopupStyles = {
-      ...popupStyles,
-      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-      color: '#166534',
-      border: '1px solid #bbf7d0',
-    };
-
-    const errorPopupStyles = {
-      ...popupStyles,
-      background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)',
-      color: '#991b1b',
-      border: '1px solid #fecaca',
-    };
-
-    return (
-      <div style={type === 'success' ? successPopupStyles : errorPopupStyles}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-          <span style={{ flex: 1, wordBreak: 'break-word' }}>{message}</span>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'inherit',
-              cursor: 'pointer',
-              fontSize: '18px',
-              padding: '4px',
-              borderRadius: '4px',
-              minWidth: '24px',
-              minHeight: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ×
-          </button>
-        </div>
-      </div>
-    );
+  const validateField = (name, value) => {
+    const errors = { ...fieldErrors };
+    switch (name) {
+      case 'email':
+        if (!value) {
+          errors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          errors.email = 'Please enter a valid email';
+        } else {
+          delete errors.email;
+        }
+        break;
+      case 'password':
+        if (!value) {
+          errors.password = 'Password is required';
+        } else if (value.length < 6) {
+          errors.password = 'Password must be at least 6 characters';
+        } else {
+          delete errors.password;
+        }
+        break;
+      case 'confirmPassword':
+        if (mode === 'signup') {
+          if (!value) {
+            errors.confirmPassword = 'Please confirm your password';
+          } else if (value !== formData.password) {
+            errors.confirmPassword = 'Passwords do not match';
+          } else {
+            delete errors.confirmPassword;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleEmailPassword = async (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      validateField(name, value);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage('');
-    
-    try {
-      if (mode === 'signup') {
-        await createUserWithEmailAndPassword(auth, email, password);
-        // Save bio to Firestore if not empty
-        if (bio && auth.currentUser) {
-          // Example: await setDoc(doc(db, 'users', auth.currentUser.uid), { bio });
-        }
-        setMessage('Account created successfully! Welcome! 🎉');
-        if (onSuccess) onSuccess();
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-        setMessage('Welcome back! 👋');
-        if (onSuccess) onSuccess();
-      }
-    } catch (err) {
-      console.error('Auth error:', err);
-      let errorMessage = 'Authentication failed';
-      
-      if (err.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email';
-      } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password';
-      } else if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'An account with this email already exists';
-      } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Password should be at least 6 characters';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Please enter a valid email address';
-      }
-      
-      setMessage(errorMessage);
-    } finally {
+    const isEmailValid = validateField('email', formData.email);
+    const isPasswordValid = validateField('password', formData.password);
+    const isConfirmPasswordValid = mode === 'signin' || validateField('confirmPassword', formData.confirmPassword);
+    if (!isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setIsLoading(true);
-    setMessage('');
-    
-    try {
-      console.log('Attempting Google sign-in...');
-      console.log('Google provider:', googleProvider);
-      
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log('Google sign-in successful:', result.user.email);
-      setMessage('Welcome! Signed in with Google 🎉');
-      if (onSuccess) onSuccess();
-    } catch (err) {
-      console.error('Google sign-in error:', err);
-      let errorMessage = 'Google sign-in failed';
-      
-      if (err.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Sign-in was cancelled';
-      } else if (err.code === 'auth/popup-blocked') {
-        errorMessage = 'Pop-up was blocked. Please allow pop-ups for this site';
-      } else if (err.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = 'An account already exists with this email using a different sign-in method';
-      }
-      
-      setMessage(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleReset = async () => {
-    if (!email) {
-      setMessage('Please enter your email address first');
       return;
     }
-    
-    setIsLoading(true);
-    setMessage('');
-    
     try {
-      await sendPasswordResetEmail(auth, email);
-      setMessage('Password reset email sent! Check your inbox 📧');
+      if (mode === 'signup') {
+        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        showNotification('🎉 Account created successfully! Welcome aboard!', 'success');
+      } else {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        showNotification('👋 Welcome back! Great to see you again!', 'success');
+      }
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+      }, 1000);
     } catch (err) {
-      console.error('Password reset error:', err);
-      setMessage(err.message || 'Failed to send reset email');
+      let errorMessage = 'Authentication failed';
+      switch (err.code) {
+        case 'auth/user-not-found':
+          errorMessage = '🔍 No account found with this email';
+          break;
+        case 'auth/wrong-password':
+        case 'auth/invalid-credentials':
+          errorMessage = '🔒 Invalid email or password';
+          break;
+        case 'auth/email-already-in-use':
+          errorMessage = '📧 An account with this email already exists';
+          break;
+        case 'auth/weak-password':
+          errorMessage = '🛡️ Password should be at least 6 characters';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = '✉️ Please enter a valid email address';
+          break;
+        default:
+          errorMessage = err.message || 'Authentication failed';
+      }
+      showNotification(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithPopup(auth, googleProvider);
+      showNotification('🚀 Welcome! Signed in with Google successfully!', 'success');
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+      }, 1000);
+    } catch (err) {
+      showNotification('❌ Google sign-in failed. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!formData.email) {
+      showNotification('📧 Please enter your email address first', 'error');
+      return;
+    }
+    if (!validateField('email', formData.email)) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      showNotification('📬 Password reset email sent! Check your inbox', 'success');
+    } catch (err) {
+      showNotification('❌ Failed to send reset email', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const switchMode = () => {
+    setMode(mode === 'signin' ? 'signup' : 'signin');
+    setFieldErrors({});
+    setNotification(null);
+    setFormData(prev => ({ ...prev, confirmPassword: '' }));
+    setPasswordStrength(0);
+    if (firstInputRef.current) {
+      setTimeout(() => firstInputRef.current.focus(), 100);
+    }
+  };
+
+  const getPasswordStrengthText = () => {
+    if (passwordStrength < 25) return 'Weak';
+    if (passwordStrength < 50) return 'Fair';
+    if (passwordStrength < 75) return 'Good';
+    return 'Strong';
+  };
+
+  // Notification Component
+  const Notification = ({ message, type, onClose, hiding }) => (
+    <div
+      style={{
+        ...styles.notification(type),
+        ...(hiding ? styles.notificationHiding : {})
+      }}
+      role="alert"
+      tabIndex={0}
+      aria-live="assertive"
+      onClick={onClose}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+        {type === 'success' ? (
+          <CheckCircle style={{ color: '#22c55e', marginRight: 8 }} />
+        ) : (
+          <AlertCircle style={{ color: '#dc2626', marginRight: 8 }} />
+        )}
+        <span style={{ flex: 1 }}>{message}</span>
+        <button
+          onClick={e => { e.stopPropagation(); onClose(); }}
+          style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', marginLeft: 8, fontSize: 18 }}
+          aria-label="Close notification"
+        >
+          <X />
+        </button>
+      </div>
+    </div>
+  );
+
+  // Input Field
+  const InputField = ({ icon: Icon, name, type, placeholder, showToggle, onToggle, error, inputRef }) => (
+    <div style={styles.inputGroup}>
+      <div style={styles.inputWrapper}>
+        <div style={{ ...styles.inputIcon, ...(focusedField === name ? { color: '#6366f1' } : {}) }}>
+          <Icon size={20} />
+        </div>
+        <input
+          ref={inputRef}
+          type={type}
+          name={name}
+          placeholder={placeholder}
+          value={formData[name]}
+          onChange={handleInputChange}
+          onFocus={() => setFocusedField(name)}
+          onBlur={() => setFocusedField(null)}
+          disabled={isLoading}
+          style={{
+            ...styles.input,
+            ...(error ? { borderColor: '#ef4444', boxShadow: '0 0 0 3px #fecaca' } : {}),
+            ...(focusedField === name ? { borderColor: '#6366f1', boxShadow: '0 0 0 3px #e0e7ff' } : {}),
+            ...(isLoading ? styles.buttonDisabled : {})
+          }}
+          tabIndex={0}
+          aria-label={placeholder}
+          autoComplete={name === 'password' ? 'current-password' : name}
+        />
+        {showToggle && (
+          <button
+            type="button"
+            onClick={onToggle}
+            style={styles.inputToggle}
+            tabIndex={0}
+            aria-label={type === 'password' ? 'Show password' : 'Hide password'}
+          >
+            {type === 'password' ? (
+              <EyeOff size={20} />
+            ) : (
+              <Eye size={20} />
+            )}
+          </button>
+        )}
+      </div>
+      {name === 'password' && formData.password && mode === 'signup' && (
+        <div style={styles.inputGroup}>
+          <div style={styles.inputWrapper}>
+            <span style={styles.passwordStrengthText(passwordStrength)}>Password strength: {getPasswordStrengthText()}</span>
+          </div>
+          <div style={styles.passwordStrengthBar}>
+            <div style={styles.passwordStrengthFill(passwordStrength)} />
+          </div>
+        </div>
+      )}
+      {error && (
+        <div style={styles.error}>
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+    </div>
+  );
+
+  // Google Social Login Button
+  const GoogleButton = ({ onClick, disabled }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{ ...styles.socialButton, ...(disabled ? styles.buttonDisabled : {}) }}
+      tabIndex={0}
+      aria-label="Sign in with Google"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: 8 }}>
+        <path fill="#fff" d="M21.35 11.1h-9.18v2.92h5.98c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#fff" d="M12.17 22.99c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.35v2.84c1.81 2.69 5.52 5.16 9.82 5.16z"/>
+        <path fill="#fff" d="M5.99 14.08c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.35C1.6 8.54 1.17 10.21 1.17 12s.43 3.45 1.18 4.93l2.85-2.22.81-.63z"/>
+        <path fill="#fff" d="M12.17 5.37c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.62 2.08 15.14.99 12.17.99c-4.3 0-8.01 2.47-9.82 6.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      <span>Sign in with Google</span>
+      {isLoading && <Loader2 size={18} style={{ marginLeft: 8, animation: 'spin 1s linear infinite' }} />}
+    </button>
+  );
 
   return (
     <>
-      {/* Mobile-friendly popup notification */}
-      {message && (
-        <NotificationPopup
-          message={message}
-          type={message.includes('Welcome') || message.includes('successfully') || message.includes('sent') ? 'success' : 'error'}
-          onClose={() => setMessage('')}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          hiding={notification.hiding}
+          onClose={() => setNotification(null)}
         />
       )}
-
-      <div style={containerStyles}>
-        <h1 style={titleStyles}>
-          {mode === 'signup' ? 'Create Account' : 'Welcome Back'}
-        </h1>
-        
-        <p style={subtitleStyles}>
-          {mode === 'signup' 
-            ? 'Join us and start managing your friendships' 
-            : 'Sign in to access your account'
-          }
-        </p>
-
-        <form onSubmit={handleEmailPassword} style={formStyles}>
-          <div style={inputGroupStyles}>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={inputStyles}
-              disabled={isLoading}
-            />
-          </div>
-          <div style={inputGroupStyles}>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={inputStyles}
-              disabled={isLoading}
-            />
-          </div>
-          {mode === 'signup' && (
-            <div style={{ marginBottom: 16 }}>
-              <label htmlFor="bio" style={{ display: 'block', fontWeight: 500, marginBottom: 4 }}>Bio (optional)</label>
-              <textarea
-                id="bio"
-                name="bio"
-                value={bio}
-                onChange={e => setBio(e.target.value)}
-                placeholder="Tell us a little about yourself..."
-                rows={3}
-                style={{ width: '100%', borderRadius: 8, border: '1px solid #ddd', padding: 10, fontSize: 16, resize: 'vertical', background: '#fafbfc' }}
-                disabled={isLoading}
-              />
+      <div style={styles.root}>
+        <form
+          style={styles.card}
+          onSubmit={handleSubmit}
+          aria-label="Login form"
+          autoComplete="on"
+        >
+          <div style={styles.header}>
+            <div style={styles.iconBox} aria-hidden="true">
+              {mode === 'signup' ? (
+                <Sparkles size={40} />
+              ) : (
+                <Shield size={40} />
+              )}
             </div>
-          )}
-          <button 
-            type="submit" 
-            style={primaryButtonStyles}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : (mode === 'signup' ? 'Create Account' : 'Sign In')}
-          </button>
-        </form>
-
-        <div style={dividerStyles}>
-          <div style={dividerLineStyles}></div>
-          <span style={{ margin: '0 16px' }}>or continue with</span>
-          <div style={dividerLineStyles}></div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-          <button
-            type="button"
-            onClick={handleGoogle}
-            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '10px 0', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
-            disabled={isLoading}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            <span>Google</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMessage('🍎 Apple Sign-In coming soon!')}
-            style={{ flex: 1, background: '#000', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
-            disabled={isLoading}
-          >
-            <Apple size={20} />
-            <span>Apple</span>
-          </button>
-        </div>
-
-        {mode === 'signin' && (
-          <button 
-            onClick={handleReset} 
-            style={secondaryButtonStyles}
-            disabled={isLoading}
-          >
-            Forgot your password?
-          </button>
-        )}
-
-        <div style={{ marginTop: 'clamp(24px, 6vw, 32px)', textAlign: 'center' }}>
-          <p style={{ color: '#6b7280', fontSize: 'clamp(13px, 3.5vw, 14px)', lineHeight: '1.5' }}>
-            {mode === 'signup' ? (
-              <>
-                Already have an account?{' '}
-                <button 
-                  type="button" 
-                  onClick={() => setMode('signin')}
-                  style={toggleButtonStyles}
-                >
-                  Sign in
-                </button>
-              </>
-            ) : (
-              <>
-                New here?{' '}
-                <button 
-                  type="button" 
-                  onClick={() => setMode('signup')}
-                  style={toggleButtonStyles}
-                >
-                  Create an account
-                </button>
-              </>
+            <h1 style={styles.title}>{mode === 'signup' ? 'Join Our Community' : 'Welcome Back'}</h1>
+            <p style={styles.subtitle}>
+              {mode === 'signup'
+                ? 'Create your account and start your journey'
+                : 'Sign in to continue to your dashboard'}
+            </p>
+          </div>
+          <div style={styles.form} ref={formRef}>
+            <InputField
+              icon={Mail}
+              name="email"
+              type="email"
+              placeholder="Enter your email address"
+              error={fieldErrors.email}
+              inputRef={firstInputRef}
+            />
+            <InputField
+              icon={Lock}
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
+              showToggle={true}
+              onToggle={() => setShowPassword(!showPassword)}
+              error={fieldErrors.password}
+            />
+            {mode === 'signup' && (
+              <InputField
+                icon={Lock}
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm your password"
+                showToggle={true}
+                onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                error={fieldErrors.confirmPassword}
+              />
             )}
-          </p>
-        </div>
+            {mode === 'signin' && (
+              <div style={styles.inputGroup}>
+                <label style={styles.rememberMe}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={e => setRememberMe(e.target.checked)}
+                    style={{ marginRight: 6 }}
+                    tabIndex={0}
+                  />
+                  Remember me
+                </label>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{ ...styles.button, ...(isLoading ? styles.buttonDisabled : {}) }}
+              tabIndex={0}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={18} style={{ marginRight: 8, animation: 'spin 1s linear infinite' }} />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {mode === 'signup' ? 'Create Account' : 'Sign In'}
+                  <ArrowRight size={18} style={{ marginLeft: 8 }} />
+                </>
+              )}
+            </button>
+            <div style={styles.divider}>
+              <div style={styles.dividerLine} />
+              <span>or</span>
+              <div style={styles.dividerLine} />
+            </div>
+            <GoogleButton onClick={handleGoogleSignIn} disabled={isLoading} />
+            {mode === 'signin' && (
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                disabled={isLoading}
+                style={styles.forgotPassword}
+                tabIndex={0}
+              >
+                Forgot your password?
+              </button>
+            )}
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <span style={{ color: '#555', fontSize: 15 }}>
+                {mode === 'signup' ? 'Already have an account?' : 'New to our platform?'}{' '}
+                <button
+                  type="button"
+                  onClick={switchMode}
+                  style={styles.switchMode}
+                  tabIndex={0}
+                >
+                  {mode === 'signup' ? 'Sign in here' : 'Create an account'}
+                </button>
+              </span>
+            </div>
+          </div>
+        </form>
       </div>
+      <style>{`
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      `}</style>
     </>
   );
 }
