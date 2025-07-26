@@ -16,62 +16,7 @@ const loadTone = async () => {
 };
 import Login from './Login';
 
-// Collapsible Section Component
-const CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
-    const [expanded, setExpanded] = useState(defaultExpanded);
-    
-    const handleToggle = () => {
-        const newExpanded = !expanded;
-        setExpanded(newExpanded);
-        if (onToggle) onToggle(newExpanded);
-    };
-    
-    return (
-        <div style={{
-            marginBottom: '24px',
-            border: '1px solid #e1e5e9',
-            borderRadius: '8px',
-            overflow: 'hidden'
-        }}>
-            <button
-                onClick={handleToggle}
-                style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    backgroundColor: '#f8f9fa',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    color: '#2c3e50'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-            >
-                {title}
-                <span style={{
-                    fontSize: '20px',
-                    transition: 'transform 0.2s ease',
-                    transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
-                }}>
-                    ▼
-                </span>
-            </button>
-            {expanded && (
-                <div style={{
-                    padding: '20px',
-                    backgroundColor: '#ffffff'
-                }}>
-                    {children}
-                </div>
-            )}
-        </div>
-    );
-};
+
 
 const appId = "friends-reminder-1b494";
 
@@ -167,6 +112,63 @@ const tierFrequencies = {
 const App = () => {
     console.log('App component rendering...');
     
+    // Collapsible Section Component - moved inside App component
+    const CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
+        const [expanded, setExpanded] = useState(defaultExpanded);
+        
+        const handleToggle = () => {
+            const newExpanded = !expanded;
+            setExpanded(newExpanded);
+            if (onToggle) onToggle(newExpanded);
+        };
+        
+        return (
+            <div style={{
+                marginBottom: '24px',
+                border: '1px solid #e1e5e9',
+                borderRadius: '8px',
+                overflow: 'hidden'
+            }}>
+                <button
+                    onClick={handleToggle}
+                    style={{
+                        width: '100%',
+                        padding: '16px 20px',
+                        backgroundColor: '#f8f9fa',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        color: '#2c3e50'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                >
+                    {title}
+                    <span style={{
+                        fontSize: '20px',
+                        transition: 'transform 0.2s ease',
+                        transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                    }}>
+                        ▼
+                    </span>
+                </button>
+                {expanded && (
+                    <div style={{
+                        padding: '20px',
+                        backgroundColor: '#ffffff'
+                    }}>
+                        {children}
+                    </div>
+                )}
+            </div>
+        );
+    };
+    
     // Authentication state
     const [user, setUser] = useState(null);
     const [isAuthReady, setIsAuthReady] = useState(false);
@@ -248,6 +250,8 @@ const App = () => {
     const [showAllFriends, setShowAllFriends] = useState(true); // Expanded by default
     const [showSettings, setShowSettings] = useState(false); // Collapsed by default
     const [showAddNewFriend, setShowAddNewFriend] = useState(false); // Collapsed by default
+    const [showFriendsToMessage, setShowFriendsToMessage] = useState(true); // Expanded by default
+    const [showUpcomingBirthdays, setShowUpcomingBirthdays] = useState(true); // Expanded by default
     
     // Initialize synth when needed
     const getSynth = useCallback(async () => {
@@ -2651,133 +2655,25 @@ const App = () => {
                     </div>
                 </div>
 
-
-                {/* Primary Action - Add Friend/Reminder */}
-                <div style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
-                    padding: '32px',
-                    marginBottom: '32px',
-                    border: '2px solid #e1e5e9',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                }}>
-                    <h2 style={{
-                        fontSize: '28px',
-                        fontWeight: '700',
-                        color: '#2c3e50',
-                        marginBottom: '8px',
-                        textAlign: 'center'
-                    }}>
-                        Create Custom Notification
-                    </h2>
-                    <p style={{
-                        color: '#6c757d',
-                        marginBottom: '24px',
-                        fontSize: '16px',
-                        textAlign: 'center'
-                    }}>
-                        Set up reminders to stay in touch with friends
-                    </p>
-                    
-                    {/* Enhanced Add Friend Form */}
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '16px',
-                        maxWidth: '600px',
-                        margin: '0 auto'
-                    }}>
-                        {/* Friend Selection */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '12px',
-                            alignItems: 'center',
-                            flexWrap: 'wrap'
-                        }}>
-                            <input
-                                type="text"
-                                value={quickAddName}
-                                onChange={(e) => setQuickAddName(e.target.value)}
-                                style={{
-                                    ...inputStyles(false),
-                                    flex: '1',
-                                    minWidth: '200px'
-                                }}
-                                placeholder="Friend's name"
-                            />
-                            {friends.length > 0 && (
-                                <select
-                                    value=""
-                                    onChange={(e) => {
-                                        if (e.target.value) {
-                                            const friend = friends.find(f => f.id === e.target.value);
-                                            if (friend) {
-                                                setQuickAddName(friend.name);
-                                            }
-                                        }
-                                    }}
-                                    style={{
-                                        ...inputStyles(false),
-                                        minWidth: '150px'
-                                    }}
-                                >
-                                    <option value="">Or select existing friend</option>
-                                    {friends.map(friend => (
-                                        <option key={friend.id} value={friend.id}>{friend.name}</option>
-                                    ))}
-                                </select>
-                            )}
-                        </div>
-
-                        {/* Reminder Settings */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                            gap: '12px'
-                        }}>
-                            <div>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '4px',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    color: '#2c3e50'
-                                }}>
-                                    How often should we remind you?
-                                </label>
-                                <select
-                                    value={reminderFrequency}
-                                    onChange={(e) => setReminderFrequency(e.target.value)}
-                                    style={inputStyles(false)}
-                                >
-                                    <option value="weekly">Weekly</option>
-                                    <option value="bi-weekly">Every 2 weeks</option>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Every 3 months</option>
-                                    <option value="yearly">Yearly</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label style={{
-                                    display: 'block',
-                                    marginBottom: '4px',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    color: '#2c3e50'
-                                }}>
-                                    Preferred reminder time
-                                </label>
-                                <input
-                                    type="time"
-                                    value={preferredNotificationTime}
-                                    onChange={(e) => setPreferredNotificationTime(e.target.value)}
-                                    style={inputStyles(false)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Message/Notes */}
+                {/* Add/Edit New Friend Section - Now Collapsible */}
+                <CollapsibleSection 
+                    title={`${editingFriendId ? 'Edit Friend' : 'Add New Friend'} (${currentMode === 'private' ? 'Private' : 'Shared'})`}
+                    defaultExpanded={false}
+                    isExpanded={showAddNewFriend}
+                    onToggle={setShowAddNewFriend}
+                >
+                    <div style={formStyles}>
+                        <input
+                            type="text"
+                            placeholder="Friend's Name"
+                            value={name}
+                            onChange={(e) => { setName(e.target.value); setNameError(false); }}
+                            style={inputStyles(nameError)}
+                            required
+                        />
+                        {nameError && <p style={errorTextStyle}>Name is required.</p>}
+                        
+                        {/* Birthday Field with Label */}
                         <div>
                             <label style={{
                                 display: 'block',
@@ -2786,396 +2682,358 @@ const App = () => {
                                 fontWeight: '600',
                                 color: '#2c3e50'
                             }}>
-                                Reminder message (optional)
+                                Birthday *
                             </label>
-                            <textarea
-                                value={interactionNotes}
-                                onChange={(e) => setInteractionNotes(e.target.value)}
-                                placeholder="e.g., 'Check in about work project' or 'Ask about vacation plans'"
-                                style={{
-                                    ...inputStyles(false),
-                                    minHeight: '80px',
-                                    resize: 'vertical',
-                                    fontFamily: 'inherit'
-                                }}
+                            <input
+                                type="date"
+                                value={birthday}
+                                onChange={(e) => { setBirthday(e.target.value); setBirthdayError(false); }}
+                                style={inputStyles(birthdayError)}
+                                required
                             />
+                            {birthdayError && <p style={errorTextStyle}>Birthday is required.</p>}
                         </div>
+                        
 
-                        {/* Action Buttons */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '12px',
-                            justifyContent: 'center',
-                            marginTop: '8px'
-                        }}>
-                            <button
-                                onClick={handleQuickAddFriend}
-                                style={{
-                                    ...buttonStyles,
-                                    backgroundColor: '#28a745',
-                                    minWidth: '140px',
-                                    fontSize: '16px',
-                                    fontWeight: '600'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
-                            >
-                                Set Reminder
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-
-                {/* Add/Edit New Friend Section */}
-                <h2 style={sectionTitleStyles}>
-                    {editingFriendId ? 'Edit Friend' : 'Add New Friend'} ({currentMode === 'private' ? 'Private' : 'Shared'})
-                </h2>
-                <div style={formStyles}>
-                    <input
-                        type="text"
-                        placeholder="Friend's Name"
-                        value={name}
-                        onChange={(e) => { setName(e.target.value); setNameError(false); }}
-                        style={inputStyles(nameError)}
-                        required
-                    />
-                    {nameError && <p style={errorTextStyle}>Name is required.</p>}
-                    <input
-                        type="date"
-                        value={birthday}
-                        onChange={(e) => { setBirthday(e.target.value); setBirthdayError(false); }}
-                        style={inputStyles(birthdayError)}
-                        required
-                    />
-                    {birthdayError && <p style={errorTextStyle}>Birthday is required.</p>}
-                    <input
-                        type="date"
-                        value={lastBirthdayWished}
-                        onChange={(e) => setLastBirthdayWished(e.target.value)}
-                        style={inputStyles(false)}
-                        placeholder="Last Birthday Wished (Optional)"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Gift Ideas (e.g., Book, Coffee Mug)"
-                        value={giftIdeas}
-                        onChange={(e) => setGiftIdeas(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    <select
-                        value={giftStatus}
-                        onChange={(e) => setGiftStatus(e.target.value)}
-                        style={selectStyles}
-                    >
-                        <option value="Not Started">Gift: Not Started</option>
-                        <option value="Idea">Gift: Idea</option>
-                        <option value="Purchased">Gift: Purchased</option>
-                        <option value="Wrapped">Gift: Wrapped</option>
-                        <option value="Given">Gift: Given</option>
-                    </select>
-                    <input
-                        type="number"
-                        placeholder="Gift Budget (Optional, e.g., 50.00)"
-                        value={giftBudget}
-                        onChange={(e) => setGiftBudget(e.target.value)}
-                        style={inputStyles(false)}
-                        step="0.01"
-                    />
-                    <select
-                        value={reminderFrequency}
-                        onChange={(e) => setReminderFrequency(e.target.value)}
-                        style={selectStyles}
-                    >
-                        <option value="monthly">Remind Monthly</option>
-                        <option value="bi-weekly">Remind Bi-Weekly</option>
-                        <option value="weekly">Remind Weekly</option>
-                        <option value="quarterly">Remind Quarterly</option>
-                    </select>
-                    <input
-                        type="text"
-                        placeholder="Group (e.g., Family, Work, College)"
-                        value={group}
-                        onChange={(e) => setGroup(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    <select
-                        value={relationshipTier}
-                        onChange={(e) => setRelationshipTier(e.target.value)}
-                        style={selectStyles}
-                    >
-                        <option value="close">Close Friend</option>
-                        <option value="regular">Regular Friend</option>
-                        <option value="distant">Distant Acquaintance</option>
-                    </select>
-
-                    {/* Profile Photo Upload */}
-                    <div style={fileInputContainerStyles}>
-                        <label style={fileInputLabelStyles}>Profile Photo:</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                                if (e.target.files[0]) {
-                                    setProfilePhotoFile(e.target.files[0]);
-                                    setProfilePhotoUrl(URL.createObjectURL(e.target.files[0]));
-                                } else {
-                                    setProfilePhotoFile(null);
-                                    if (!editingFriendId) {
-                                        setProfilePhotoUrl('');
-                                    }
-                                }
-                            }}
-                            style={inputStyles(false)}
-                        />
-                        {(profilePhotoUrl || (editingFriendId && friends.find(f => f.id === editingFriendId)?.profilePhotoUrl)) && (
-                            <img
-                                src={profilePhotoUrl || friends.find(f => f.id === editingFriendId)?.profilePhotoUrl}
-                                alt="Profile Preview"
-                                style={profilePhotoPreviewStyles}
-                            />
-                        )}
-                        {profilePhotoUrl && (
-                            <button
-                                onClick={() => {
-                                    setProfilePhotoUrl('');
-                                    setProfilePhotoFile(null);
-                                    if (fileInputRef.current) fileInputRef.current.value = '';
-                                }}
-                                style={{ ...buttonStyles, backgroundColor: currentTheme.errorText, fontSize: '0.9em', padding: '8px 12px' }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#b03a2e' : '#c0392b'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = currentTheme.errorText}
-                            >
-                                Remove Photo
-                            </button>
-                        )}
-                    </div>
-
-                    <input
-                        type="text"
-                        placeholder="Tags (comma-separated, e.g., 'gamer, coworker')"
-                        value={tags}
-                        onChange={(e) => setTags(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    {/* Social Media Links */}
-                    <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '10px'}}>Social Media Links</h3>
-                    <input
-                        type="url"
-                        placeholder="Facebook URL"
-                        value={facebookUrl}
-                        onChange={(e) => setFacebookUrl(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    <input
-                        type="url"
-                        placeholder="Instagram URL"
-                        value={instagramUrl}
-                        onChange={(e) => setInstagramUrl(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    <input
-                        type="url"
-                        placeholder="LinkedIn URL"
-                        value={linkedinUrl}
-                        onChange={(e) => setLinkedinUrl(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    <input
-                        type="url"
-                        placeholder="Twitter URL"
-                        value={twitterUrl}
-                        onChange={(e) => setTwitterUrl(e.target.value)}
-                        style={inputStyles(false)}
-                    />
-                    {/* Important Dates */}
-                    <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '10px'}}>Important Dates</h3>
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <input
-                            type="date"
-                            value={newImportantDate}
-                            onChange={(e) => setNewImportantDate(e.target.value)}
-                            style={{...inputStyles(false), flex: '1 1 120px'}}
-                        />
+                        
                         <input
                             type="text"
-                            placeholder="Description (e.g., Anniversary)"
-                            value={newImportantDateDescription}
-                            onChange={(e) => setNewImportantDateDescription(e.target.value)}
-                            style={{...inputStyles(false), flex: '1 1 150px'}}
+                            placeholder="Gift Ideas (e.g., Book, Coffee Mug)"
+                            value={giftIdeas}
+                            onChange={(e) => setGiftIdeas(e.target.value)}
+                            style={inputStyles(false)}
                         />
                         <select
-                            value={newImportantDateRecurrence}
-                            onChange={(e) => setNewImportantDateRecurrence(e.target.value)}
-                            style={{...selectStyles, flex: '0 1 auto', minWidth: '100px', padding: '10px'}}
+                            value={giftStatus}
+                            onChange={(e) => setGiftStatus(e.target.value)}
+                            style={selectStyles}
                         >
-                            <option value="none">One-time</option>
-                            <option value="yearly">Yearly</option>
-                            <option value="monthly">Monthly</option>
+                            <option value="Not Started">Gift: Not Started</option>
+                            <option value="Idea">Gift: Idea</option>
+                            <option value="Purchased">Gift: Purchased</option>
+                            <option value="Wrapped">Gift: Wrapped</option>
+                            <option value="Given">Gift: Given</option>
                         </select>
-                        <button
-                            onClick={handleAddImportantDate}
-                            style={{...buttonStyles, flex: '0 1 auto', minWidth: '100px', padding: '10px'}}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyles.backgroundColor}
+                        <input
+                            type="number"
+                            placeholder="Gift Budget (Optional, e.g., 50.00)"
+                            value={giftBudget}
+                            onChange={(e) => setGiftBudget(e.target.value)}
+                            style={inputStyles(false)}
+                            step="0.01"
+                        />
+                        <select
+                            value={reminderFrequency}
+                            onChange={(e) => setReminderFrequency(e.target.value)}
+                            style={selectStyles}
                         >
-                            Add Event
-                        </button>
-                    </div>
-                    <ul style={listStyles}>
-                        {importantDates.map((event, index) => {
-                            const nextOccurrenceDate = getNextImportantDateOccurrence(event, new Date().getFullYear());
-                            const daysUntilEvent = nextOccurrenceDate ? calculateDaysUntilDate(nextOccurrenceDate.toISOString().slice(0, 10)) : null;
-
-                            return (
-                                <li key={index} style={importantDateItemStyles}>
-                                    <span>
-                                        {formatDate(event.date)}: {event.description}
-                                        {event.recurrence !== 'none' && ` (${event.recurrence.charAt(0).toUpperCase() + event.recurrence.slice(1)} Recurring)`}
-                                        {nextOccurrenceDate && daysUntilEvent !== null && daysUntilEvent >= 0 && (
-                                            <span style={importantDateCountdownStyles}>
-                                                {daysUntilEvent === 0 ? ' (Today!)' : ` (${daysUntilEvent} day${daysUntilEvent === 1 ? '' : 's'} left)`}
-                                            </span>
-                                        )}
-                                    </span>
-                                    <button onClick={() => handleRemoveImportantDate(index)} style={importantDateRemoveButtonStyles}>
-                                        &times;
-                                    </button>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                    {/* Per-friend Notification Settings */}
-                    <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '10px'}}>Notification Settings</h3>
-                    <div style={settingsGroupStyles}>
-                        <label style={settingsLabelStyles}>Enable Reminders:</label>
-                        <label style={toggleSwitchStyles}>
-                            <input
-                                type="checkbox"
-                                checked={enableReminders}
-                                onChange={() => setEnableReminders(!enableReminders)}
-                                style={{ opacity: 0, width: 0, height: 0 }}
-                            />
-                            <span style={toggleSliderStyles(enableReminders)}>
-                                <span style={toggleSliderBeforeStyles(enableReminders)}></span>
-                            </span>
-                        </label>
-                    </div>
-                    <div style={settingsGroupStyles}>
-                        <label style={settingsLabelStyles}>Enable Birthday Notifs:</label>
-                        <label style={toggleSwitchStyles}>
-                            <input
-                                type="checkbox"
-                                checked={enableBirthdayNotifications}
-                                onChange={() => setEnableBirthdayNotifications(!enableBirthdayNotifications)}
-                                style={{ opacity: 0, width: 0, height: 0 }}
-                            />
-                            <span style={toggleSliderStyles(enableBirthdayNotifications)}>
-                                <span style={toggleSliderBeforeStyles(enableBirthdayNotifications)}></span>
-                            </span>
-                        </label>
-                    </div>
-
-                    <textarea
-                        placeholder="Interaction Notes (e.g., talked about their new job, vacation plans)"
-                        value={interactionNotes}
-                        onChange={(e) => setInteractionNotes(e.target.value)}
-                        style={{ ...inputStyles(false), minHeight: '80px', resize: 'vertical' }}
-                    />
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                            onClick={handleSaveFriend}
-                            style={buttonStyles}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyles.backgroundColor}
+                            <option value="monthly">Remind Monthly</option>
+                            <option value="bi-weekly">Remind Bi-Weekly</option>
+                            <option value="weekly">Remind Weekly</option>
+                            <option value="quarterly">Remind Quarterly</option>
+                        </select>
+                        <input
+                            type="text"
+                            placeholder="Group (e.g., Family, Work, College)"
+                            value={group}
+                            onChange={(e) => setGroup(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                        <select
+                            value={relationshipTier}
+                            onChange={(e) => setRelationshipTier(e.target.value)}
+                            style={selectStyles}
                         >
-                            {editingFriendId ? 'Update Friend' : 'Add Friend'}
-                        </button>
-                        {editingFriendId && (
-                            <button
-                                onClick={handleCancelEdit}
-                                style={{ ...buttonStyles, backgroundColor: '#7f8c8d' }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6c7a89'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#7f8c8d'}
+                            <option value="close">Close Friend</option>
+                            <option value="regular">Regular Friend</option>
+                            <option value="distant">Distant Acquaintance</option>
+                        </select>
+
+                        {/* Profile Photo Upload */}
+                        <div style={fileInputContainerStyles}>
+                            <label style={fileInputLabelStyles}>Profile Photo:</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    if (e.target.files[0]) {
+                                        setProfilePhotoFile(e.target.files[0]);
+                                        setProfilePhotoUrl(URL.createObjectURL(e.target.files[0]));
+                                    } else {
+                                        setProfilePhotoFile(null);
+                                        if (!editingFriendId) {
+                                            setProfilePhotoUrl('');
+                                        }
+                                    }
+                                }}
+                                style={inputStyles(false)}
+                            />
+                            {(profilePhotoUrl || (editingFriendId && friends.find(f => f.id === editingFriendId)?.profilePhotoUrl)) && (
+                                <img
+                                    src={profilePhotoUrl || friends.find(f => f.id === editingFriendId)?.profilePhotoUrl}
+                                    alt="Profile Preview"
+                                    style={profilePhotoPreviewStyles}
+                                />
+                            )}
+                            {profilePhotoUrl && (
+                                <button
+                                    onClick={() => {
+                                        setProfilePhotoUrl('');
+                                        setProfilePhotoFile(null);
+                                        if (fileInputRef.current) fileInputRef.current.value = '';
+                                    }}
+                                    style={{ ...buttonStyles, backgroundColor: currentTheme.errorText, fontSize: '0.9em', padding: '8px 12px' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#b03a2e' : '#c0392b'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = currentTheme.errorText}
+                                >
+                                    Remove Photo
+                                </button>
+                            )}
+                        </div>
+
+                        <input
+                            type="text"
+                            placeholder="Tags (comma-separated, e.g., 'gamer, coworker')"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                        {/* Social Media Links */}
+                        <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '10px'}}>Social Media Links</h3>
+                        <input
+                            type="url"
+                            placeholder="Facebook URL"
+                            value={facebookUrl}
+                            onChange={(e) => setFacebookUrl(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                        <input
+                            type="url"
+                            placeholder="Instagram URL"
+                            value={instagramUrl}
+                            onChange={(e) => setInstagramUrl(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                        <input
+                            type="url"
+                            placeholder="LinkedIn URL"
+                            value={linkedinUrl}
+                            onChange={(e) => setLinkedinUrl(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                        <input
+                            type="url"
+                            placeholder="Twitter URL"
+                            value={twitterUrl}
+                            onChange={(e) => setTwitterUrl(e.target.value)}
+                            style={inputStyles(false)}
+                        />
+                        {/* Important Dates */}
+                        <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '10px'}}>Important Dates</h3>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <input
+                                type="date"
+                                value={newImportantDate}
+                                onChange={(e) => setNewImportantDate(e.target.value)}
+                                style={{...inputStyles(false), flex: '1 1 120px'}}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Description (e.g., Anniversary)"
+                                value={newImportantDateDescription}
+                                onChange={(e) => setNewImportantDateDescription(e.target.value)}
+                                style={{...inputStyles(false), flex: '1 1 150px'}}
+                            />
+                            <select
+                                value={newImportantDateRecurrence}
+                                onChange={(e) => setNewImportantDateRecurrence(e.target.value)}
+                                style={{...selectStyles, flex: '0 1 auto', minWidth: '100px', padding: '10px'}}
                             >
-                                Cancel Edit
+                                <option value="none">One-time</option>
+                                <option value="yearly">Yearly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                            <button
+                                onClick={handleAddImportantDate}
+                                style={{...buttonStyles, flex: '0 1 auto', minWidth: '100px', padding: '10px'}}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyles.backgroundColor}
+                            >
+                                Add Event
                             </button>
-                        )}
-                    </div>
-                </div>
+                        </div>
+                        <ul style={listStyles}>
+                            {importantDates.map((event, index) => {
+                                const nextOccurrenceDate = getNextImportantDateOccurrence(event, new Date().getFullYear());
+                                const daysUntilEvent = nextOccurrenceDate ? calculateDaysUntilDate(nextOccurrenceDate.toISOString().slice(0, 10)) : null;
 
-                {/* Friends to Message Section */}
-                <h2 style={sectionTitleStyles}>Friends to Message</h2>
-                <ul style={listStyles}>
-                    {friendsToMessage.length === 0 ? (
-                        <p style={{color: currentTheme.textColor}}>No friends need messaging right now. Keep up the great work! Add friends or log an interaction to update their status.</p>
-                    ) : (
-                        friendsToMessage.map((friend) => (
-                            <li key={friend.id} style={reminderItemStyles}>
-                                <FriendAvatar name={friend.name} profilePhotoUrl={friend.profilePhotoUrl} />
-                                <span style={listItemTextStyles}>
-                                    <strong>{friend.name}</strong> - Last Contacted: {formatDate(getLatestInteractionDate(friend.interactions))}
-                                </span>
-                                <div style={listItemActionsStyles}>
-                                    <button
-                                        onClick={() => handleLogInteractionClick(friend.id)}
-                                        style={messageButtonStyles}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#1a5276' : '#2980b9'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = messageButtonStyles.backgroundColor}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                                        </svg>
-                                        Log Interaction
-                                    </button>
-                                    <button
-                                        onClick={() => { setSnoozeFriendId(friend.id); setShowSnoozeModal(true); }}
-                                        style={snoozeButtonStyles}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#6c3483' : '#8e44ad'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = snoozeButtonStyles.backgroundColor}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-                                                <path d="M.5 9.905a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 0-1H1a.5.5 0 0 0-.5.5z"/>
-                                                <path d="M8 12.5a4.5 4.5 0 1 1 4.5-4.5 4.5 4.5 0 0 1-4.5 4.5zm0-9a3.5 3.5 0 1 0 3.5 3.5A3.5 3.5 0 0 0 8 3.5z"/>
-                                            </svg>
-                                            Snooze
-                                        </button>
-                                    </div>
-                                </li>
-                            ))
-                        )}
-                    </ul>
-
-                    {/* Upcoming Birthdays Section */}
-                    <h2 style={sectionTitleStyles}>Upcoming Birthdays</h2>
-                    <ul style={listStyles}>
-                        {upcomingBirthdays.length === 0 ? (
-                            <p style={{color: currentTheme.textColor}}>No upcoming birthdays in the next 30 days. Add more friends with birthdays to track them!</p>
-                        ) : (
-                            upcomingBirthdays.map((friend) => {
-                                const daysUntil = calculateDaysUntilBirthday(friend.birthday);
                                 return (
-                                    <li key={friend.id} style={birthdayItemStyles}>
-                                        <FriendAvatar name={friend.name} profilePhotoUrl={friend.profilePhotoUrl} />
-                                        <span style={listItemTextStyles}>
-                                            <strong>{friend.name}</strong> - Birthday: {formatDate(friend.birthday)} ({calculateAge(friend.birthday)} years old)
-                                            {daysUntil !== null && daysUntil >= 0 && (
-                                                <span style={birthdayCountdownStyles}>
-                                                    {daysUntil === 0 ? ' (Today!)' : ` (${daysUntil} day${daysUntil === 1 ? '' : 's'} left)`}
+                                    <li key={index} style={importantDateItemStyles}>
+                                        <span>
+                                            {formatDate(event.date)}: {event.description}
+                                            {event.recurrence !== 'none' && ` (${event.recurrence.charAt(0).toUpperCase() + event.recurrence.slice(1)} Recurring)`}
+                                            {nextOccurrenceDate && daysUntilEvent !== null && daysUntilEvent >= 0 && (
+                                                <span style={importantDateCountdownStyles}>
+                                                    {daysUntilEvent === 0 ? ' (Today!)' : ` (${daysUntilEvent} day${daysUntilEvent === 1 ? '' : 's'} left)`}
                                                 </span>
                                             )}
-                                            {friend.lastBirthdayWished && ` - Last Wished: ${formatDate(friend.lastBirthdayWished)}`}
                                         </span>
+                                        <button onClick={() => handleRemoveImportantDate(index)} style={importantDateRemoveButtonStyles}>
+                                            &times;
+                                        </button>
                                     </li>
                                 );
-                            })
-                        )}
-                    </ul>
+                            })}
+                        </ul>
+                        {/* Per-friend Notification Settings */}
+                        <h3 style={{...sectionTitleStyles, fontSize: '1.1em', marginTop: '10px'}}>Notification Settings</h3>
+                        <div style={settingsGroupStyles}>
+                            <label style={settingsLabelStyles}>Enable Reminders:</label>
+                            <label style={toggleSwitchStyles}>
+                                <input
+                                    type="checkbox"
+                                    checked={enableReminders}
+                                    onChange={() => setEnableReminders(!enableReminders)}
+                                    style={{ opacity: 0, width: 0, height: 0 }}
+                                />
+                                <span style={toggleSliderStyles(enableReminders)}>
+                                    <span style={toggleSliderBeforeStyles(enableReminders)}></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div style={settingsGroupStyles}>
+                            <label style={settingsLabelStyles}>Enable Birthday Notifs:</label>
+                            <label style={toggleSwitchStyles}>
+                                <input
+                                    type="checkbox"
+                                    checked={enableBirthdayNotifications}
+                                    onChange={() => setEnableBirthdayNotifications(!enableBirthdayNotifications)}
+                                    style={{ opacity: 0, width: 0, height: 0 }}
+                                />
+                                <span style={toggleSliderStyles(enableBirthdayNotifications)}>
+                                    <span style={toggleSliderBeforeStyles(enableBirthdayNotifications)}></span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <textarea
+                            placeholder="Interaction Notes (e.g., talked about their new job, vacation plans)"
+                            value={interactionNotes}
+                            onChange={(e) => setInteractionNotes(e.target.value)}
+                            style={{ ...inputStyles(false), minHeight: '80px', resize: 'vertical' }}
+                        />
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={handleSaveFriend}
+                                style={buttonStyles}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyles.backgroundColor}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyles.backgroundColor}
+                            >
+                                {editingFriendId ? 'Update Friend' : 'Add Friend'}
+                            </button>
+                            {editingFriendId && (
+                                <button
+                                    onClick={handleCancelEdit}
+                                    style={{ ...buttonStyles, backgroundColor: '#7f8c8d' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6c7a89'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#7f8c8d'}
+                                >
+                                    Cancel Edit
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </CollapsibleSection>
+
+                {/* Friends to Message Section */}
+                <CollapsibleSection 
+                    title="Friends to Message"
+                    defaultExpanded={true}
+                    isExpanded={showFriendsToMessage}
+                    onToggle={setShowFriendsToMessage}
+                >
+                    <ul style={listStyles}>
+                        {friendsToMessage.length === 0 ? (
+                            <p style={{color: currentTheme.textColor}}>No friends need messaging right now. Keep up the great work! Add friends or log an interaction to update their status.</p>
+                        ) : (
+                            friendsToMessage.map((friend) => (
+                                <li key={friend.id} style={reminderItemStyles}>
+                                    <FriendAvatar name={friend.name} profilePhotoUrl={friend.profilePhotoUrl} />
+                                    <span style={listItemTextStyles}>
+                                        <strong>{friend.name}</strong> - Last Contacted: {formatDate(getLatestInteractionDate(friend.interactions))}
+                                    </span>
+                                    <div style={listItemActionsStyles}>
+                                        <button
+                                            onClick={() => handleLogInteractionClick(friend.id)}
+                                            style={messageButtonStyles}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#1a5276' : '#2980b9'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = messageButtonStyles.backgroundColor}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                            </svg>
+                                            Log Interaction
+                                        </button>
+                                        <button
+                                            onClick={() => { setSnoozeFriendId(friend.id); setShowSnoozeModal(true); }}
+                                            style={snoozeButtonStyles}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#6c3483' : '#8e44ad'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = snoozeButtonStyles.backgroundColor}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                                    <path d="M.5 9.905a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 0-1H1a.5.5 0 0 0-.5.5z"/>
+                                                    <path d="M8 12.5a4.5 4.5 0 1 1 4.5-4.5 4.5 4.5 0 0 1-4.5 4.5zm0-9a3.5 3.5 0 1 0 3.5 3.5A3.5 3.5 0 0 0 8 3.5z"/>
+                                                </svg>
+                                                Snooze
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))
+                            )}
+                        </ul>
+                </CollapsibleSection>
+
+                    {/* Upcoming Birthdays Section */}
+                    <CollapsibleSection 
+                        title="Upcoming Birthdays"
+                        defaultExpanded={true}
+                        isExpanded={showUpcomingBirthdays}
+                        onToggle={setShowUpcomingBirthdays}
+                    >
+                        <ul style={listStyles}>
+                            {upcomingBirthdays.length === 0 ? (
+                                <p style={{color: currentTheme.textColor}}>No upcoming birthdays in the next 30 days. Add more friends with birthdays to track them!</p>
+                            ) : (
+                                upcomingBirthdays.map((friend) => {
+                                    const daysUntil = calculateDaysUntilBirthday(friend.birthday);
+                                    return (
+                                        <li key={friend.id} style={birthdayItemStyles}>
+                                            <FriendAvatar name={friend.name} profilePhotoUrl={friend.profilePhotoUrl} />
+                                            <span style={listItemTextStyles}>
+                                                <strong>{friend.name}</strong> - Birthday: {formatDate(friend.birthday)} ({calculateAge(friend.birthday)} years old)
+                                                {daysUntil !== null && daysUntil >= 0 && (
+                                                    <span style={birthdayCountdownStyles}>
+                                                        {daysUntil === 0 ? ' (Today!)' : ` (${daysUntil} day${daysUntil === 1 ? '' : 's'} left)`}
+                                                    </span>
+                                                )}
+                                                {friend.lastBirthdayWished && ` - Last Wished: ${formatDate(friend.lastBirthdayWished)}`}
+                                            </span>
+                                        </li>
+                                    );
+                                })
+                            )}
+                        </ul>
+                    </CollapsibleSection>
 
                     {/* All Friends List Section with Search and Filter */}
-                    <h2 style={sectionTitleStyles}>All Friends ({currentMode === 'private' ? 'Private' : 'Shared'})</h2>
-                    <div style={filterSortContainerStyles}>
+                    <CollapsibleSection 
+                        title={`All Friends (${currentMode === 'private' ? 'Private' : 'Shared'})`}
+                        defaultExpanded={true}
+                        isExpanded={showAllFriends}
+                        onToggle={setShowAllFriends}
+                    >
+                        <div style={filterSortContainerStyles}>
                         <input
                             type="text"
                             placeholder="Search by name, gift ideas, notes, or tags..."
@@ -3389,10 +3247,16 @@ const App = () => {
                             })
                         )}
                     </ul>
+                    </CollapsibleSection>
 
                     {/* Settings Section */}
-                    <h2 style={{ ...sectionTitleStyles, ...settingsSectionStyles }}>Settings</h2>
-                    <div style={formStyles}>
+                    <CollapsibleSection 
+                        title="Settings"
+                        defaultExpanded={false}
+                        isExpanded={showSettings}
+                        onToggle={setShowSettings}
+                    >
+                        <div style={formStyles}>
                         <div style={settingsGroupStyles}>
                             <label style={settingsLabelStyles} htmlFor="quietHoursStart">Quiet Hours Start:</label>
                             <input
@@ -3517,6 +3381,7 @@ const App = () => {
                             View Activity Log
                         </button>
                     </div>
+                    </CollapsibleSection>
                 </div>
 
                 {/* General Message Modal */}

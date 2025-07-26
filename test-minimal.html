@@ -1,23 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Minimal Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Test</title>
 </head>
 <body>
-    <h1>Minimal Test</h1>
-    <p>If you see this, basic HTML is working.</p>
-    <div id="test-result">Testing JavaScript...</div>
+    <div id="root">
+        <h1>Testing React Loading...</h1>
+    </div>
     
-    <script>
-        console.log('Minimal test script running...');
-        document.getElementById('test-result').innerHTML = '✅ JavaScript is working!';
+    <script type="module">
+        import React from 'https://esm.sh/react@18'
+        import ReactDOM from 'https://esm.sh/react-dom@18'
         
-        // Test if we can access window.__firebase_config
-        if (typeof window.__firebase_config !== 'undefined') {
-            console.log('Firebase config available:', window.__firebase_config);
-        } else {
-            console.log('Firebase config NOT available');
-        }
+        console.log('React loaded:', React.version);
+        console.log('ReactDOM loaded:', ReactDOM.version);
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(
+            React.createElement('div', null, 
+                React.createElement('h1', null, 'React is working!'),
+                React.createElement('p', null, 'If you see this, React loaded successfully.')
+            )
+        );
     </script>
 </body>
 </html> 
