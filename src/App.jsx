@@ -111,88 +111,67 @@ const tierFrequencies = {
     distant: 'quarterly',
 };
 
+// Collapsible Section Component - moved outside App component
+const CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
+    const [expanded, setExpanded] = useState(defaultExpanded);
+    
+    const handleToggle = () => {
+        const newExpanded = !expanded;
+        setExpanded(newExpanded);
+        if (onToggle) onToggle(newExpanded);
+    };
+    
+    return (
+        <div style={{
+            marginBottom: '24px',
+            border: '1px solid #e1e5e9',
+            borderRadius: '8px',
+            overflow: 'hidden'
+        }}>
+            <button
+                onClick={handleToggle}
+                style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    backgroundColor: '#f8f9fa',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: '#2c3e50'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+            >
+                {title}
+                <span style={{
+                    fontSize: '20px',
+                    transition: 'transform 0.2s ease',
+                    transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                }}>
+                    ▼
+                </span>
+            </button>
+            {expanded && (
+                <div style={{
+                    padding: '20px',
+                    backgroundColor: '#ffffff'
+                }}>
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const App = () => {
     console.log('App component rendering...');
     console.log('React version:', React.version);
     console.log('useState available:', typeof useState);
-    
-    // Add a simple test to see if we can render anything
-    try {
-        console.log('App component is working - about to define CollapsibleSection');
-    } catch (error) {
-        console.error('Error in App component:', error);
-        return <div>Error loading app: {error.message}</div>;
-    }
-    
-    // Collapsible Section Component - moved inside App component
-    let CollapsibleSection;
-    try {
-        CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
-            const [expanded, setExpanded] = useState(defaultExpanded);
-            
-            const handleToggle = () => {
-                const newExpanded = !expanded;
-                setExpanded(newExpanded);
-                if (onToggle) onToggle(newExpanded);
-            };
-            
-            return (
-                <div style={{
-                    marginBottom: '24px',
-                    border: '1px solid #e1e5e9',
-                    borderRadius: '8px',
-                    overflow: 'hidden'
-                }}>
-                    <button
-                        onClick={handleToggle}
-                        style={{
-                            width: '100%',
-                            padding: '16px 20px',
-                            backgroundColor: '#f8f9fa',
-                            border: 'none',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#2c3e50'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                    >
-                        {title}
-                        <span style={{
-                            fontSize: '20px',
-                            transition: 'transform 0.2s ease',
-                            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
-                        }}>
-                            ▼
-                        </span>
-                    </button>
-                    {expanded && (
-                        <div style={{
-                            padding: '20px',
-                            backgroundColor: '#ffffff'
-                        }}>
-                            {children}
-                        </div>
-                    )}
-                </div>
-            );
-        };
-        console.log('CollapsibleSection component defined successfully');
-    } catch (error) {
-        console.error('Error defining CollapsibleSection:', error);
-        CollapsibleSection = ({ title, children }) => (
-            <div style={{ padding: '10px', border: '1px solid red' }}>
-                <h3>{title}</h3>
-                <p>Error loading collapsible section</p>
-                {children}
-            </div>
-        );
-    }
     
     // Authentication state
     const [user, setUser] = useState(null);

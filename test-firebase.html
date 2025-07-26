@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Test</title>
+</head>
+<body>
+    <h1>Firebase Connection Test</h1>
+    <div id="status">Testing...</div>
+    
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCw3oPJKCHchzDoCmNjMc7mXGJBcG3tAPM",
+            authDomain: "friends-reminder-1b494.firebaseapp.com",
+            projectId: "friends-reminder-1b494",
+            storageBucket: "friends-reminder-1b494.firebasestorage.app",
+            messagingSenderId: "818386771400",
+            appId: "1:818386771400:web:3ca4fb33b928355c10f4fd",
+            measurementId: "G-ZQ6RJSWMR2"
+        };
+        
+        try {
+            console.log('Initializing Firebase...');
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            
+            console.log('Firebase initialized successfully');
+            document.getElementById('status').innerHTML = '✅ Firebase initialized successfully';
+            
+            // Test anonymous auth
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log('User authenticated:', user.uid);
+                    document.getElementById('status').innerHTML += '<br>✅ User authenticated: ' + user.uid;
+                } else {
+                    console.log('No user');
+                    document.getElementById('status').innerHTML += '<br>ℹ️ No user (this is normal)';
+                }
+            });
+            
+            // Try anonymous sign-in
+            signInAnonymously(auth).then((result) => {
+                console.log('Anonymous sign-in successful:', result.user.uid);
+                document.getElementById('status').innerHTML += '<br>✅ Anonymous sign-in successful';
+            }).catch((error) => {
+                console.error('Anonymous sign-in failed:', error);
+                document.getElementById('status').innerHTML += '<br>❌ Anonymous sign-in failed: ' + error.message;
+            });
+            
+        } catch (error) {
+            console.error('Firebase initialization failed:', error);
+            document.getElementById('status').innerHTML = '❌ Firebase initialization failed: ' + error.message;
+        }
+    </script>
+</body>
+</html> 
