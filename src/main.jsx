@@ -29,6 +29,15 @@ if (rootElement) {
     console.log('App render called successfully');
   } catch (error) {
     console.error('Error during React initialization:', error);
+    // Show error on page
+    rootElement.innerHTML = `
+      <div style="padding: 20px; color: red; font-family: Arial, sans-serif;">
+        <h1>React Loading Error</h1>
+        <p>Error: ${error.message}</p>
+        <p>Stack: ${error.stack}</p>
+        <button onclick="window.location.reload()">Reload Page</button>
+      </div>
+    `;
   }
 } else {
   console.error('Root element not found!');

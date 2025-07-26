@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { db, auth, storage } from './firebase';
-import {
-  collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// Temporarily comment out Firebase imports to test React loading
+// import { onAuthStateChanged, signOut } from 'firebase/auth';
+// import { db, auth, storage } from './firebase';
+// import {
+//   collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs
+// } from 'firebase/firestore';
+// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // Lazy load Tone.js only when needed
-let Tone = null;
-const loadTone = async () => {
-  if (!Tone) {
-    const toneModule = await import('tone');
-    Tone = toneModule.default;
-  }
-  return Tone;
-};
+// let Tone = null;
+// const loadTone = async () => {
+//   if (!Tone) {
+//     const toneModule = await import('tone');
+//     Tone = toneModule.default;
+//   }
+//   return Tone;
+// };
 import Login from './Login';
 
 
@@ -111,67 +112,90 @@ const tierFrequencies = {
 
 const App = () => {
     console.log('App component rendering...');
+    console.log('React version:', React.version);
+    console.log('useState available:', typeof useState);
+    
+    // Add a simple test to see if we can render anything
+    try {
+        console.log('App component is working - about to define CollapsibleSection');
+    } catch (error) {
+        console.error('Error in App component:', error);
+        return <div>Error loading app: {error.message}</div>;
+    }
     
     // Collapsible Section Component - moved inside App component
-    const CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
-        const [expanded, setExpanded] = useState(defaultExpanded);
-        
-        const handleToggle = () => {
-            const newExpanded = !expanded;
-            setExpanded(newExpanded);
-            if (onToggle) onToggle(newExpanded);
+    let CollapsibleSection;
+    try {
+        CollapsibleSection = ({ title, children, isExpanded, onToggle, defaultExpanded = false }) => {
+            const [expanded, setExpanded] = useState(defaultExpanded);
+            
+            const handleToggle = () => {
+                const newExpanded = !expanded;
+                setExpanded(newExpanded);
+                if (onToggle) onToggle(newExpanded);
+            };
+            
+            return (
+                <div style={{
+                    marginBottom: '24px',
+                    border: '1px solid #e1e5e9',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                }}>
+                    <button
+                        onClick={handleToggle}
+                        style={{
+                            width: '100%',
+                            padding: '16px 20px',
+                            backgroundColor: '#f8f9fa',
+                            border: 'none',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: '#2c3e50'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                    >
+                        {title}
+                        <span style={{
+                            fontSize: '20px',
+                            transition: 'transform 0.2s ease',
+                            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                        }}>
+                            ▼
+                        </span>
+                    </button>
+                    {expanded && (
+                        <div style={{
+                            padding: '20px',
+                            backgroundColor: '#ffffff'
+                        }}>
+                            {children}
+                        </div>
+                    )}
+                </div>
+            );
         };
-        
-        return (
-            <div style={{
-                marginBottom: '24px',
-                border: '1px solid #e1e5e9',
-                borderRadius: '8px',
-                overflow: 'hidden'
-            }}>
-                <button
-                    onClick={handleToggle}
-                    style={{
-                        width: '100%',
-                        padding: '16px 20px',
-                        backgroundColor: '#f8f9fa',
-                        border: 'none',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        fontSize: '18px',
-                        fontWeight: '600',
-                        color: '#2c3e50'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                >
-                    {title}
-                    <span style={{
-                        fontSize: '20px',
-                        transition: 'transform 0.2s ease',
-                        transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
-                    }}>
-                        ▼
-                    </span>
-                </button>
-                {expanded && (
-                    <div style={{
-                        padding: '20px',
-                        backgroundColor: '#ffffff'
-                    }}>
-                        {children}
-                    </div>
-                )}
+        console.log('CollapsibleSection component defined successfully');
+    } catch (error) {
+        console.error('Error defining CollapsibleSection:', error);
+        CollapsibleSection = ({ title, children }) => (
+            <div style={{ padding: '10px', border: '1px solid red' }}>
+                <h3>{title}</h3>
+                <p>Error loading collapsible section</p>
+                {children}
             </div>
         );
-    };
+    }
     
-    // Authentication state
+    // Authentication state - temporarily disabled for testing
     const [user, setUser] = useState(null);
-    const [isAuthReady, setIsAuthReady] = useState(false);
+    const [isAuthReady, setIsAuthReady] = useState(true); // Set to true for testing
     
     // State variables for managing application data and UI
     const [friends, setFriends] = useState([]);
@@ -267,25 +291,25 @@ const App = () => {
     // Using useRef to store a Set of IDs for which notifications have been shown in the current session.
     const notifiedFriendsRef = useRef(new Set());
 
-    // Function to request browser notification permission from the user.
-    const requestNotificationPermission = async () => {
-        if (!("Notification" in window)) {
-            console.warn("This browser does not support desktop notification.");
-            return;
-        }
-        if (Notification.permission === "granted") {
-            console.log("Notification permission already granted.");
-            return;
-        }
-        if (Notification.permission !== "denied") {
-            const permission = await Notification.requestPermission();
-            if (permission === "granted") {
-                console.log("Notification permission granted.");
-            } else {
-                console.warn("Notification permission denied.");
-            }
-        }
-    };
+    // Function to request browser notification permission from the user - temporarily disabled for testing
+    // const requestNotificationPermission = async () => {
+    //     if (!("Notification" in window)) {
+    //         console.warn("This browser does not support desktop notification.");
+    //         return;
+    //     }
+    //     if (Notification.permission === "granted") {
+    //         console.log("Notification permission already granted.");
+    //         return;
+    //     }
+    //     if (Notification.permission !== "denied") {
+    //         const permission = await Notification.requestPermission();
+    //         if (permission === "granted") {
+    //         console.log("Notification permission granted.");
+    //         } else {
+    //         console.warn("Notification permission denied.");
+    //         }
+    //         }
+    // };
 
     // Function to check if current time is within quiet hours.
     const isDuringQuietHours = () => {
@@ -324,66 +348,39 @@ const App = () => {
         return isHourMatch && isMinuteMatch;
     }, [preferredNotificationTime]);
 
-    // Function to display a browser notification and play sound.
+    // Function to display a browser notification and play sound - temporarily simplified for testing
     const showNotification = useCallback((title, body, friendId, notificationType) => {
-        // Check global notification settings first
-        if (Notification.permission === "granted" && !isDuringQuietHours() && isNearPreferredNotificationTime()) {
-            const friend = friends.find(f => f.id === friendId);
-            if (!friend) return;
-
-            // Check per-friend notification settings
-            let shouldNotify = false;
-            if (notificationType === 'message' && friend.enableReminders) {
-                shouldNotify = true;
-            } else if (notificationType === 'birthday' && friend.enableBirthdayNotifications) {
-                shouldNotify = true;
-            } else if (notificationType === 'importantDate' && friend.enableReminders) { // Use enableReminders for important dates
-                shouldNotify = true;
-            }
-
-            if (shouldNotify) {
-                new Notification(title, { body });
-                if (notificationSoundEnabled) {
-                    getSynth().then(synthInstance => {
-                        synthInstance.triggerAttackRelease("C5", "8n");
-                    }).catch(error => {
-                        console.error('Error playing notification sound:', error);
-                    });
-                }
-            } else {
-                console.log(`Notification suppressed by per-friend setting: ${title} - ${body}`);
-            }
-        } else if (isDuringQuietHours()) {
-            console.log(`Notification suppressed due to quiet hours: ${title} - ${body}`);
-        } else if (!isNearPreferredNotificationTime()) {
-            console.log(`Notification suppressed: Not preferred notification time. ${title} - ${body}`);
+        console.log('showNotification called:', title, body, friendId, notificationType);
+        // Temporarily simplified to avoid potential issues
+        if (Notification.permission === "granted") {
+            new Notification(title, { body });
         } else {
             console.log(`Notification blocked (permission not granted): ${title} - ${body}`);
         }
-    }, [notificationSoundEnabled, quietHoursStart, quietHoursEnd, preferredNotificationTime, isNearPreferredNotificationTime, synth, friends]);
-
-    // useEffect hook for Firebase authentication.
-    useEffect(() => {
-        console.log('Setting up Firebase auth...');
-        
-        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-            console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-            setUser(user);
-            if (user) {
-                setUserId(user.uid);
-            } else {
-                setUserId(null);
-            }
-            setIsAuthReady(true);
-        }, (error) => {
-            console.error('Firebase auth error:', error);
-            setIsAuthReady(true); // Still set ready so we can show error
-        });
-
-        requestNotificationPermission();
-
-        return () => unsubscribeAuth();
     }, []);
+
+    // useEffect hook for Firebase authentication - temporarily disabled for testing
+    // useEffect(() => {
+    //     console.log('Setting up Firebase auth...');
+    //     
+    //     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    //         console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+    //         setUser(user);
+    //         if (user) {
+    //         setUserId(user.uid);
+    //         } else {
+    //         setUserId(null);
+    //         }
+    //         setIsAuthReady(true);
+    //     }, (error) => {
+    //         console.error('Firebase auth error:', error);
+    //         setIsAuthReady(true); // Still set ready so we can show error
+    //     });
+    // 
+    //     requestNotificationPermission();
+    // 
+    //     return () => unsubscribeAuth();
+    // }, []);
 
     // Helper function to get the latest interaction date
     const getLatestInteractionDate = (interactions) => {
