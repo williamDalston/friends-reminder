@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-// Temporarily comment out Firebase imports to test React loading
-// import { onAuthStateChanged, signOut } from 'firebase/auth';
-// import { db, auth, storage } from './firebase';
-// import {
-//   collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs
-// } from 'firebase/firestore';
-// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { onAuthStateChanged, signOut, signInAnonymously, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { db, auth, storage } from './firebase';
+import {
+  collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, query, getDocs
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // Lazy load Tone.js only when needed
-// let Tone = null;
-// const loadTone = async () => {
-//   if (!Tone) {
-//     const toneModule = await import('tone');
-//     Tone = toneModule.default;
-//   }
-//   return Tone;
-// };
+let Tone = null;
+const loadTone = async () => {
+  if (!Tone) {
+    const toneModule = await import('tone');
+    Tone = toneModule.default;
+  }
+  return Tone;
+};
 import Login from './Login';
 
 
@@ -193,9 +192,9 @@ const App = () => {
         );
     }
     
-    // Authentication state - temporarily disabled for testing
+    // Authentication state
     const [user, setUser] = useState(null);
-    const [isAuthReady, setIsAuthReady] = useState(true); // Set to true for testing
+    const [isAuthReady, setIsAuthReady] = useState(true); // Start as true to show app immediately
     
     // State variables for managing application data and UI
     const [friends, setFriends] = useState([]);
@@ -265,6 +264,9 @@ const App = () => {
     const [showActivityLogModal, setShowActivityLogModal] = useState(false);
     const [activityLogFilterTerm, setActivityLogFilterTerm] = useState('');
     const [activityLogSortOption, setActivityLogSortOption] = useState('newest');
+    
+    // Login modal state
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
     // Tone.js Synth for notification sounds - lazy loaded
     const [synth, setSynth] = useState(null);
@@ -291,25 +293,38 @@ const App = () => {
     // Using useRef to store a Set of IDs for which notifications have been shown in the current session.
     const notifiedFriendsRef = useRef(new Set());
 
-    // Function to request browser notification permission from the user - temporarily disabled for testing
-    // const requestNotificationPermission = async () => {
-    //     if (!("Notification" in window)) {
-    //         console.warn("This browser does not support desktop notification.");
-    //         return;
-    //     }
-    //     if (Notification.permission === "granted") {
-    //         console.log("Notification permission already granted.");
-    //         return;
-    //     }
-    //     if (Notification.permission !== "denied") {
-    //         const permission = await Notification.requestPermission();
-    //         if (permission === "granted") {
-    //         console.log("Notification permission granted.");
-    //         } else {
-    //         console.warn("Notification permission denied.");
-    //         }
-    //         }
-    // };
+    // Function to request browser notification permission from the user
+    const requestNotificationPermission = async () => {
+        if (!("Notification" in window)) {
+            console.warn("This browser does not support desktop notification.");
+            return;
+        }
+        if (Notification.permission === "granted") {
+            console.log("Notification permission already granted.");
+            return;
+        }
+        if (Notification.permission !== "denied") {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                console.log("Notification permission granted.");
+            } else {
+                console.warn("Notification permission denied.");
+            }
+        }
+    };
+
+    // Function to upgrade anonymous user to authenticated account
+    const upgradeToEmailPassword = async (email, password) => {
+        try {
+            const credential = EmailAuthProvider.credential(email, password);
+            await linkWithCredential(auth.currentUser, credential);
+            console.log('Successfully linked anonymous account to email/password');
+            return { success: true };
+        } catch (error) {
+            console.error('Error linking account:', error);
+            return { success: false, error: error.message };
+        }
+    };
 
     // Function to check if current time is within quiet hours.
     const isDuringQuietHours = () => {
@@ -348,39 +363,79 @@ const App = () => {
         return isHourMatch && isMinuteMatch;
     }, [preferredNotificationTime]);
 
-    // Function to display a browser notification and play sound - temporarily simplified for testing
+    // Function to display a browser notification and play sound
     const showNotification = useCallback((title, body, friendId, notificationType) => {
-        console.log('showNotification called:', title, body, friendId, notificationType);
-        // Temporarily simplified to avoid potential issues
-        if (Notification.permission === "granted") {
-            new Notification(title, { body });
+        // Check global notification settings first
+        if (Notification.permission === "granted" && !isDuringQuietHours() && isNearPreferredNotificationTime()) {
+            const friend = friends.find(f => f.id === friendId);
+            if (!friend) return;
+
+            // Check per-friend notification settings
+            let shouldNotify = false;
+            if (notificationType === 'message' && friend.enableReminders) {
+                shouldNotify = true;
+            } else if (notificationType === 'birthday' && friend.enableBirthdayNotifications) {
+                shouldNotify = true;
+            } else if (notificationType === 'importantDate' && friend.enableReminders) { // Use enableReminders for important dates
+                shouldNotify = true;
+            }
+
+            if (shouldNotify) {
+                new Notification(title, { body });
+                if (notificationSoundEnabled) {
+                    getSynth().then(synthInstance => {
+                        synthInstance.triggerAttackRelease("C5", "8n");
+                    }).catch(error => {
+                        console.error('Error playing notification sound:', error);
+                    });
+                }
+            } else {
+                console.log(`Notification suppressed by per-friend setting: ${title} - ${body}`);
+            }
+        } else if (isDuringQuietHours()) {
+            console.log(`Notification suppressed due to quiet hours: ${title} - ${body}`);
+        } else if (!isNearPreferredNotificationTime()) {
+            console.log(`Notification suppressed: Not preferred notification time. ${title} - ${body}`);
         } else {
             console.log(`Notification blocked (permission not granted): ${title} - ${body}`);
         }
-    }, []);
+    }, [notificationSoundEnabled, quietHoursStart, quietHoursEnd, preferredNotificationTime, isNearPreferredNotificationTime, synth, friends]);
 
-    // useEffect hook for Firebase authentication - temporarily disabled for testing
-    // useEffect(() => {
-    //     console.log('Setting up Firebase auth...');
-    //     
-    //     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-    //         console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-    //         setUser(user);
-    //         if (user) {
-    //         setUserId(user.uid);
-    //         } else {
-    //         setUserId(null);
-    //         }
-    //         setIsAuthReady(true);
-    //     }, (error) => {
-    //         console.error('Firebase auth error:', error);
-    //         setIsAuthReady(true); // Still set ready so we can show error
-    //     });
-    // 
-    //     requestNotificationPermission();
-    // 
-    //     return () => unsubscribeAuth();
-    // }, []);
+    // useEffect hook for Firebase authentication with anonymous sign-in
+    useEffect(() => {
+        console.log('Setting up Firebase auth...');
+        
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+            console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+            
+            if (!user) {
+                // No user found, sign in anonymously
+                console.log('No user found, signing in anonymously...');
+                try {
+                    const anonymousUser = await signInAnonymously(auth);
+                    console.log('Anonymous sign-in successful:', anonymousUser.user.uid);
+                    // User will be set in the next onAuthStateChanged call
+                } catch (error) {
+                    console.error('Anonymous sign-in failed:', error);
+                    // Even if anonymous sign-in fails, we can still show the app
+                    setIsAuthReady(true);
+                }
+            } else {
+                // User exists (anonymous or authenticated)
+                console.log('User found:', user.isAnonymous ? 'Anonymous' : 'Authenticated');
+                setUser(user);
+                setUserId(user.uid);
+                setIsAuthReady(true);
+            }
+        }, (error) => {
+            console.error('Firebase auth error:', error);
+            setIsAuthReady(true); // Still set ready so we can show error
+        });
+
+        requestNotificationPermission();
+
+        return () => unsubscribeAuth();
+    }, []);
 
     // Helper function to get the latest interaction date
     const getLatestInteractionDate = (interactions) => {
@@ -2374,28 +2429,98 @@ const App = () => {
             </div>
         );
     }
-    if (!user) return <Login />;
+    // Show loading while auth is initializing
+    if (!isAuthReady) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                backgroundColor: '#f4f7f6',
+                fontFamily: 'Arial, sans-serif'
+            }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '4px solid #e1e5e9',
+                        borderTop: '4px solid #2ecc71',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                        margin: '0 auto 20px'
+                    }}></div>
+                    <p>Loading your Friends Reminder app...</p>
+                </div>
+                <style>{`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `}</style>
+            </div>
+        );
+    }
 
     return (
         <div style={appStyles}>
             <div style={containerStyles}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h1 style={headerStyles}>Friends Reminder</h1>
-                    <button 
-                        onClick={() => signOut(auth)}
-                        style={{
-                            backgroundColor: '#e74c3c',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '8px 16px',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer',
-                            fontWeight: '500'
-                        }}
-                    >
-                        Sign Out
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        {/* Guest mode indicator */}
+                        {user && user.isAnonymous && (
+                            <div style={{
+                                backgroundColor: '#fff3cd',
+                                border: '1px solid #ffeaa7',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
+                                fontSize: '0.8rem',
+                                color: '#856404',
+                                marginRight: '10px'
+                            }}>
+                                Guest Mode
+                            </div>
+                        )}
+                        
+                        {/* Login/Signup button for anonymous users */}
+                        {user && user.isAnonymous && (
+                            <button 
+                                onClick={() => setShowLoginModal(true)}
+                                style={{
+                                    backgroundColor: '#3498db',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '8px 16px',
+                                    fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                Sign Up / Login
+                            </button>
+                        )}
+                        
+                        {/* Sign Out button for authenticated users */}
+                        {user && !user.isAnonymous && (
+                            <button 
+                                onClick={() => signOut(auth)}
+                                style={{
+                                    backgroundColor: '#e74c3c',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '8px 16px',
+                                    fontSize: '0.9rem',
+                                    cursor: 'pointer',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                Sign Out
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* User ID Display - Useful for debugging and understanding multi-user data */}
@@ -3605,6 +3730,22 @@ const App = () => {
                             >
                                 Close Log
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Login/Signup Modal */}
+                {showLoginModal && (
+                    <div style={modalOverlayStyles}>
+                        <div style={{ ...modalContentStyles, maxWidth: '400px' }}>
+                            <button onClick={() => setShowLoginModal(false)} style={closeModalButtonStyles}>
+                                &times;
+                            </button>
+                            <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Sign Up / Login</h2>
+                            <p style={{ marginBottom: '20px', textAlign: 'center', color: '#666' }}>
+                                Create an account to save your data permanently and sync across devices.
+                            </p>
+                            <Login onSuccess={() => setShowLoginModal(false)} />
                         </div>
                     </div>
                 )}

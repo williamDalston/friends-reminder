@@ -48,64 +48,8 @@
   </head>
   <body>
     <div id="root">
-      <h1 style="color: red;">If you see this, React hasn't loaded yet</h1>
-      <p>Loading your Friends Reminder app...</p>
-      <div id="loading-status">Checking app status...</div>
+      <!-- React will replace this content -->
     </div>
-    
-    <script>
-      // Simple fallback to show what's happening
-      setTimeout(() => {
-        const status = document.getElementById('loading-status');
-        if (status) {
-          status.innerHTML = 'Still loading... If this persists, check the browser console for errors.';
-        }
-      }, 3000);
-      
-      setTimeout(() => {
-        const status = document.getElementById('loading-status');
-        if (status) {
-          status.innerHTML = 'Loading is taking longer than expected. Please refresh the page.';
-        }
-      }, 10000);
-      
-      // Check if React loaded after 15 seconds
-      setTimeout(() => {
-        const root = document.getElementById('root');
-        if (root && root.children.length === 1 && root.children[0].tagName === 'H1') {
-          console.error('React failed to load - showing fallback');
-          root.innerHTML = `
-            <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-              <h1 style="color: #e74c3c;">App Loading Issue</h1>
-              <p>The app is having trouble loading. This might be due to:</p>
-              <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
-                <li>Network connectivity issues</li>
-                <li>Browser cache problems</li>
-                <li>JavaScript errors</li>
-              </ul>
-              <button onclick="window.location.reload()" style="
-                background: #3498db; 
-                color: white; 
-                border: none; 
-                padding: 10px 20px; 
-                border-radius: 5px; 
-                cursor: pointer;
-                margin: 10px;
-              ">Refresh Page</button>
-              <button onclick="window.location.href='./test.html'" style="
-                background: #95a5a6; 
-                color: white; 
-                border: none; 
-                padding: 10px 20px; 
-                border-radius: 5px; 
-                cursor: pointer;
-                margin: 10px;
-              ">Test Basic Loading</button>
-            </div>
-          `;
-        }
-            }, 15000);
-    </script>
-    <script type="module" src="./src/main.jsx"></script>
+    <script type="module" src="./src/main.jsx?v=1"></script>
   </body>
 </html>

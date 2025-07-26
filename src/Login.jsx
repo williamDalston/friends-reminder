@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from './firebase';
 
-export default function Login() {
+export default function Login({ onSuccess }) {
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -358,9 +358,11 @@ export default function Login() {
       if (mode === 'signup') {
         await createUserWithEmailAndPassword(auth, email, password);
         setMessage('Account created successfully! Welcome! 🎉');
+        if (onSuccess) onSuccess();
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         setMessage('Welcome back! 👋');
+        if (onSuccess) onSuccess();
       }
     } catch (err) {
       console.error('Auth error:', err);
@@ -395,6 +397,7 @@ export default function Login() {
       const result = await signInWithPopup(auth, googleProvider);
       console.log('Google sign-in successful:', result.user.email);
       setMessage('Welcome! Signed in with Google 🎉');
+      if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Google sign-in error:', err);
       let errorMessage = 'Google sign-in failed';
