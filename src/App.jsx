@@ -610,6 +610,10 @@ const App = () => {
 
     // Function to handle adding a new friend or updating an existing one (full form).
     const handleSaveFriend = async () => {
+        if (user && user.isAnonymous) {
+            setShowGuestAddFriendModal(true);
+            return;
+        }
         setNameError(false);
         setBirthdayError(false);
 
@@ -719,6 +723,8 @@ const App = () => {
             setEnableReminders(true);
             setEnableBirthdayNotifications(true);
             setShowModal(true);
+            setReminderConfirmation("You will get a notification at the set date and time.");
+            setTimeout(() => setReminderConfirmation(""), 4000);
         } catch (error) {
             console.error("Error saving friend:", error);
             setMessage("Failed to save friend. Please try again.");
@@ -3747,6 +3753,22 @@ const App = () => {
                             </p>
                             <Login onSuccess={() => setShowLoginModal(false)} />
                         </div>
+                    </div>
+                )}
+                {showGuestAddFriendModal && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 16px rgba(0,0,0,0.2)', maxWidth: 350, textAlign: 'center' }}>
+                            <h2>Sign Up or Log In Required</h2>
+                            <p>To save friends, please sign up or log in.</p>
+                            <button style={{ margin: '20px 0 0 0', padding: '10px 20px', borderRadius: 8, background: '#2ecc71', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }} onClick={() => { setShowGuestAddFriendModal(false); setShowLoginModal(true); }}>Sign Up / Log In</button>
+                            <br />
+                            <button style={{ margin: '10px 0 0 0', padding: '8px 16px', borderRadius: 8, background: '#eee', color: '#333', border: 'none', cursor: 'pointer' }} onClick={() => setShowGuestAddFriendModal(false)}>Cancel</button>
+                        </div>
+                    </div>
+                )}
+                {reminderConfirmation && (
+                    <div style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#2ecc71', color: 'white', padding: '14px 28px', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.15)', fontSize: 18, zIndex: 1001 }}>
+                        {reminderConfirmation}
                     </div>
                 )}
             </div>
